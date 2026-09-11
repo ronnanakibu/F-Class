@@ -33,6 +33,7 @@
 7. **Culture & Memory Bank:** Inside jokes, lab quotes, class traditions, and memorable anecdotes.
 8. **Terminal Easter Egg:** Interactive developer console modal (`Ctrl + ~` / Terminal button) with custom commands (`help`, `students`, `projects`, `quote`, `clear`).
 9. **Footer:** Quick navigation, social links, copyright, and Polmed JTKI credits.
+10. **Rich Open Graph & Social Previews:** Custom optimized 1200x630 banner for WhatsApp, Telegram, Discord, and Instagram bio previews with Next.js App Router metadata.
 
 ---
 

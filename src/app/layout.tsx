@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Space_Grotesk, Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 
@@ -23,10 +23,28 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['400', '500', '600', '700'],
 });
 
+export const viewport: Viewport = {
+  themeColor: '#08090C',
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
-  title: 'CE F — Computer Engineering | Politeknik Negeri Medan',
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || 'https://fclass.my.id'
+  ),
+  title: {
+    default: 'CE F — Computer Engineering | Politeknik Negeri Medan',
+    template: '%s | CE F Polmed',
+  },
   description:
-    'The official digital archive and student showcase of Class F, Computer Engineering (Teknik Komputer), JTKI — Politeknik Negeri Medan. Circuits, Code, and Chaos.',
+    'The official digital archive, living yearbook, and student showcase of Class F, Computer Engineering (Teknik Komputer), JTKI — Politeknik Negeri Medan. Circuits, Code, and Chaos.',
+  applicationName: 'CE F Polmed',
+  authors: [
+    { name: 'CE F — Politeknik Negeri Medan', url: 'https://github.com/ronnanakibu/F-Class' },
+  ],
+  creator: 'Class F — Teknik Komputer Polmed',
+  publisher: 'Politeknik Negeri Medan',
   keywords: [
     'CE F',
     'Computer Engineering',
@@ -36,25 +54,52 @@ export const metadata: Metadata = {
     'JTKI',
     'Class F',
     'TK-F',
+    'Living Yearbook',
+    'Student Portfolio',
   ],
-  authors: [{ name: 'CE F — Politeknik Negeri Medan' }],
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     type: 'website',
     locale: 'id_ID',
+    url: '/',
+    siteName: 'CE F — Polmed',
     title: 'CE F — Computer Engineering | Politeknik Negeri Medan',
     description:
-      'The official digital archive and student showcase of Class F, Computer Engineering, Polmed. Circuits, Code, and Chaos.',
-    siteName: 'CE F — Polmed',
+      'Official digital identity, living yearbook, and portfolio showcase of Class F (Teknik Komputer), JTKI Politeknik Negeri Medan.',
+    images: [
+      {
+        url: '/og.jpg',
+        width: 1200,
+        height: 630,
+        type: 'image/jpeg',
+        alt: 'CE F — Computer Engineering Politeknik Negeri Medan',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'CE F — Computer Engineering | Politeknik Negeri Medan',
     description:
-      'The official digital archive and student showcase of Class F, Computer Engineering, Polmed.',
+      'Official digital identity, living yearbook, and portfolio showcase of Class F (Teknik Komputer), JTKI Politeknik Negeri Medan.',
+    images: ['/og.jpg'],
+    creator: '@ronnanakibu',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/favicon.ico',
   },
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 
