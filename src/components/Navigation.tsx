@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 
+import ThemeToggle from '@/components/ThemeToggle';
+
 const navLinks = [
   { label: 'Home', href: '#hero' },
   { label: 'About', href: '#manifesto' },
@@ -33,7 +35,7 @@ export default function Navigation() {
     <nav
       className={`fixed top-4 left-4 right-4 z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-bg-primary/80 backdrop-blur-md border border-border shadow-lg shadow-black/20'
+          ? 'bg-bg-primary/85 backdrop-blur-md border border-border shadow-lg shadow-black/10'
           : 'bg-transparent'
       } rounded-2xl`}
     >
@@ -48,7 +50,7 @@ export default function Navigation() {
           <span className="text-text-primary">F</span>
         </a>
 
-        {/* Desktop Links */}
+        {/* Desktop Links + Theme Toggle */}
         <div className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
             <a
@@ -59,16 +61,21 @@ export default function Navigation() {
               {link.label}
             </a>
           ))}
+          <div className="w-px h-4 bg-border mx-2" aria-hidden="true" />
+          <ThemeToggle />
         </div>
 
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden p-2 text-text-muted hover:text-accent transition-colors duration-200 cursor-pointer"
-          aria-label={isOpen ? 'Close menu' : 'Open menu'}
-        >
-          {isOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        {/* Mobile Actions: Theme Toggle + Menu Button */}
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="p-2 text-text-muted hover:text-accent transition-colors duration-200 cursor-pointer rounded-xl border border-border bg-bg-surface/50"
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
+          >
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Overlay */}

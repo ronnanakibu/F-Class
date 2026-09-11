@@ -4,22 +4,64 @@
    CE F — Design System Tokens (Tailwind v4)
    ============================================ */
 
+:root {
+  /* --- Dark Theme (Default) --- */
+  --bg-primary: #0a0a0c;
+  --bg-elevated: #121216;
+  --bg-surface: #1a1a22;
+  --bg-hover: #22222e;
+
+  --accent: #00F0FF;
+  --accent-dim: rgba(0, 240, 255, 0.15);
+  --accent-glow: rgba(0, 240, 255, 0.25);
+
+  --text-primary: #e8e8ec;
+  --text-muted: #8b8b98;
+  --text-dim: #555562;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-accent: rgba(0, 240, 255, 0.2);
+
+  --grid-line: rgba(255, 255, 255, 0.03);
+  --grid-accent-line: rgba(0, 240, 255, 0.04);
+}
+
+[data-theme="light"], .light {
+  /* --- Light Theme (Crisp Tech Editorial) --- */
+  --bg-primary: #f8fafc;
+  --bg-elevated: #ffffff;
+  --bg-surface: #f1f5f9;
+  --bg-hover: #e2e8f0;
+
+  --accent: #0284c7;
+  --accent-dim: rgba(2, 132, 199, 0.12);
+  --accent-glow: rgba(2, 132, 199, 0.22);
+
+  --text-primary: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #94a3b8;
+  --border-color: rgba(15, 23, 42, 0.08);
+  --border-accent: rgba(2, 132, 199, 0.35);
+
+  --grid-line: rgba(15, 23, 42, 0.04);
+  --grid-accent-line: rgba(2, 132, 199, 0.06);
+}
+
 @theme inline {
-  /* --- Colors --- */
-  --color-bg-primary: #0a0a0c;
-  --color-bg-elevated: #121216;
-  --color-bg-surface: #1a1a22;
-  --color-bg-hover: #22222e;
+  /* --- Colors mapped to CSS variables --- */
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-hover: var(--bg-hover);
 
-  --color-accent: #00F0FF;
-  --color-accent-dim: rgba(0, 240, 255, 0.15);
-  --color-accent-glow: rgba(0, 240, 255, 0.25);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-accent-glow: var(--accent-glow);
 
-  --color-text-primary: #e8e8ec;
-  --color-text-muted: #6b6b78;
-  --color-text-dim: #44444f;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-accent: rgba(0, 240, 255, 0.2);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+  --color-border: var(--border-color);
+  --color-border-accent: var(--border-accent);
 
   /* --- Fonts --- */
   --font-heading: 'Space Grotesk', system-ui, sans-serif;
@@ -172,15 +214,15 @@ body {
 
 .bg-grid {
   background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
 .bg-grid-animated {
   background-image:
-    linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(var(--grid-accent-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-accent-line) 1px, transparent 1px);
   background-size: 40px 40px;
   animation: grid-move 8s linear infinite;
 }
