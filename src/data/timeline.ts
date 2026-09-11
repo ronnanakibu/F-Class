@@ -1,0 +1,68 @@
+import type { TimelineEvent } from '@/types';
+
+export const timeline: TimelineEvent[] = [
+  {
+    id: 'tl-01',
+    title: 'Hari Pertama — Orientasi',
+    date: 'Agustus 2024',
+    semester: 1,
+    description: 'Thirty strangers sat in the same room. By the end of the week, we were already arguing about which programming language is superior.',
+    icon: 'flag',
+  },
+  {
+    id: 'tl-02',
+    title: 'First Lab: Digital Logic',
+    date: 'September 2024',
+    semester: 1,
+    description: 'AND gates, OR gates, breadboards, and the sweet smell of burning components. The real engineering education begins.',
+    icon: 'cpu',
+  },
+  {
+    id: 'tl-03',
+    title: 'Praktikum Pemrograman Dasar',
+    date: 'Oktober 2024',
+    semester: 1,
+    description: 'Hello World was just the beginning. Nested loops and segmentation faults became our daily companions.',
+    icon: 'code',
+  },
+  {
+    id: 'tl-04',
+    title: 'UAS Semester 1 — Survived',
+    date: 'Januari 2025',
+    semester: 1,
+    description: 'Four exams in five days. The group chat hit 2,000 messages. Everyone made it through. Barely.',
+    icon: 'trophy',
+  },
+  {
+    id: 'tl-05',
+    title: 'Semester 2 — Mikrokontroler Era',
+    date: 'Februari 2025',
+    semester: 2,
+    description: 'ESP32 entered the chat. Suddenly everything needed to be "smart" — smart lamp, smart fan, smart everything.',
+    icon: 'zap',
+  },
+  {
+    id: 'tl-06',
+    title: 'IoT Workshop',
+    date: 'Maret 2025',
+    semester: 2,
+    description: 'Industry partners visited campus. We demo\'d our IoT prototypes. The Wi-Fi crashed halfway through. Classic.',
+    icon: 'wifi',
+  },
+  {
+    id: 'tl-07',
+    title: 'First Team Projects Launched',
+    date: 'April 2025',
+    semester: 2,
+    description: 'From solo assignments to team builds. Git merge conflicts taught us more about teamwork than any lecture.',
+    icon: 'rocket',
+  },
+  {
+    id: 'tl-08',
+    title: 'The Journey Continues...',
+    date: 'Sekarang',
+    semester: 3,
+    description: 'Two semesters down, more to go. The circuits are more complex, the code is cleaner, and the coffee intake has doubled.',
+    icon: 'arrow-right',
+  },
+];

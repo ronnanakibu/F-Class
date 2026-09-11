@@ -1,0 +1,68 @@
+import type { Memory } from '@/types';
+
+export const memories: Memory[] = [
+  {
+    id: 'mem-01',
+    title: 'Hari Pertama — Orientasi JTKI',
+    date: '2024-08-12',
+    category: 'Event',
+    image: '',
+    caption: 'Thirty strangers walked in. A class walked out. Day one of Computer Engineering F.',
+  },
+  {
+    id: 'mem-02',
+    title: 'Praktikum Pertama: Digital Logic',
+    date: '2024-09-15',
+    category: 'Practicum',
+    image: '',
+    caption: 'First time touching a breadboard. First time burning a resistor. First time feeling alive.',
+  },
+  {
+    id: 'mem-03',
+    title: 'All-Night Lab Session',
+    date: '2024-11-20',
+    category: 'Chaos',
+    image: '',
+    caption: 'The AC broke at 2 AM. We coded through the heat. The bugs were sweating too.',
+  },
+  {
+    id: 'mem-04',
+    title: 'IoT Workshop with Industry Partners',
+    date: '2025-01-18',
+    category: 'Event',
+    image: '',
+    caption: 'Industry came to us. We showed them what we built. They were impressed (we think).',
+  },
+  {
+    id: 'mem-05',
+    title: 'Lab Praktikum Mikrokontroler',
+    date: '2025-03-10',
+    category: 'Practicum',
+    image: '',
+    caption: 'ESP32, LEDs, and an unreasonable amount of jumper cables. Peak engineering aesthetics.',
+  },
+  {
+    id: 'mem-06',
+    title: 'Kantin Chronicles',
+    date: '2025-04-05',
+    category: 'Campus',
+    image: '',
+    caption: 'Between classes, between bites, the best ideas were born over nasi goreng.',
+  },
+  {
+    id: 'mem-07',
+    title: 'UAS Preparation: The Great Study Group',
+    date: '2025-06-01',
+    category: 'Campus',
+    image: '',
+    caption: 'Thirty people, one WhatsApp group, seven hundred unread messages. Exam season.',
+  },
+  {
+    id: 'mem-08',
+    title: 'Foto Kelas Resmi',
+    date: '2025-07-15',
+    category: 'Event',
+    image: '',
+    caption: 'The one time everyone dressed properly. Historic, really.',
+  },
+];
