@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import os from 'os';
 
 /**
  * Global In-Memory Cache to preserve data across serverless cold/warm instances
@@ -102,8 +103,8 @@ export async function readStorageFile(
     }
   }
 
-  // Priority 4: /tmp ephemeral disk (serverless fallback)
-  const tmpPath = path.join('/tmp', normalizedPath.replace(/\//g, '__'));
+  // Priority 4: Ephemeral disk fallback (safe on Vercel /tmp and Windows temp)
+  const tmpPath = path.join(os.tmpdir(), normalizedPath.replace(/\//g, '__'));
   try {
     const tmpContent = await fs.readFile(tmpPath, 'utf-8');
     if (tmpContent && tmpContent.trim().length > 0 && tmpContent.trim() !== '[]') {
@@ -131,7 +132,7 @@ export interface WriteResult {
 /**
  * Writes data file with serverless safety:
  * 1. Updates in-memory cache instantly
- * 2. Writes to /tmp (writable on Vercel serverless)
+ * 2. Writes to os.tmpdir() (writable on Vercel serverless)
  * 3. Tries writing to project disk (works in local dev, gracefully catches EROFS on Vercel)
  * 4. Optional: Syncs to Hugging Face or GitHub if token/repo is configured in environment
  */
@@ -146,8 +147,8 @@ export async function writeStorageFile(
   // 1. In-memory update
   memoryCache.set(cacheKey, content);
 
-  // 2. Write to /tmp (safe on Vercel and Linux serverless)
-  const tmpPath = path.join('/tmp', normalizedPath.replace(/\//g, '__'));
+  // 2. Write to temp directory (safe on Vercel and Windows)
+  const tmpPath = path.join(os.tmpdir(), normalizedPath.replace(/\//g, '__'));
   try {
     await fs.writeFile(tmpPath, content, 'utf-8');
   } catch (err) {
