@@ -1,12 +1,29 @@
-import { MessageCircle } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { MessageCircle, Terminal } from 'lucide-react';
 import { IconGithub, IconInstagram } from './BrandIcons';
 import { classInfo } from '@/data/classInfo';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const router = useRouter();
+  const [clickCount, setClickCount] = useState(0);
+
+  // Easter Egg trigger: click 5 times to open admin console
+  const handleEasterEggClick = () => {
+    const next = clickCount + 1;
+    setClickCount(next);
+    if (next >= 5) {
+      setClickCount(0);
+      router.push('/admin');
+    }
+  };
 
   return (
-    <footer className="relative border-t border-border bg-bg-elevated/30">
+    <footer className="relative border-t border-border bg-bg-elevated/30 select-none">
       <div className="container-custom py-16 md:py-20">
         {/* Closing Statement */}
         <div className="text-center mb-12">
@@ -70,10 +87,25 @@ export default function Footer() {
             </span>
           </div>
 
-          <p className="text-xs text-text-dim font-mono text-center sm:text-right">
-            © {currentYear} {classInfo.classCode} — {classInfo.institution}.
-            Crafted by CE F students.
-          </p>
+          <div className="flex items-center gap-3">
+            <p
+              onClick={handleEasterEggClick}
+              className="text-xs text-text-dim font-mono text-center sm:text-right cursor-pointer hover:text-text-muted transition-colors"
+              title="CE F Student Class"
+            >
+              © {currentYear} {classInfo.classCode} — {classInfo.institution}.
+              Crafted by CE F students.
+            </p>
+
+            {/* Subtle Terminal Easter Egg Link */}
+            <Link
+              href="/admin"
+              className="p-1 rounded text-text-dim/40 hover:text-accent hover:bg-accent/10 transition-colors"
+              title="Terminal Console"
+            >
+              <Terminal size={13} />
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

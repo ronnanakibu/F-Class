@@ -13,6 +13,7 @@ const navLinks = [
   { label: 'Timeline', href: '#timeline' },
   { label: 'Gallery', href: '#gallery' },
   { label: 'Projects', href: '#projects' },
+  { label: 'Music', href: '#frequency' },
 ];
 
 export default function Navigation() {

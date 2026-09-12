@@ -1,68 +1,63 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { students } from '@/data/students';
 import FilterBar from './FilterBar';
 import StudentCard from './StudentCard';
-import StudentModal from './StudentModal';
 import SectionReveal from './SectionReveal';
-import type { Student } from '@/types';
 
 export default function Students() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
-  // Curated broad categories (instead of every individual interest)
-  const categories = ['All', 'Hardware', 'Software', 'IoT', 'AI/ML', 'Security'];
-
-  // Category → interest mapping for filtering
-  const categoryMap: Record<string, string[]> = {
-    Hardware: ['Embedded Systems', 'FPGA', 'Digital Electronics', 'Robotics'],
-    Software: ['Web Development', 'UI/UX Design', 'Mobile Development', 'Backend Engineering', 'Database Systems', 'DevOps', 'Game Development', 'Graphic Design', 'Photography', 'Cloud Computing'],
-    IoT: ['IoT', 'Smart Home', 'Microcontrollers'],
-    'AI/ML': ['Machine Learning', 'Computer Vision', 'AI', 'Data Science', 'AR/VR'],
-    Security: ['Cybersecurity', 'Network Security', 'Reverse Engineering', 'CTF', 'Linux Administration'],
-  };
+  // Dynamic role categories based on data
+  const categories = useMemo(() => {
+    const rawRoles = Array.from(new Set(students.map((s) => s.role).filter(Boolean))) as string[];
+    const priority = ['Komting', 'Wakil Komting', 'Sekretaris', 'Bendahara', 'Anggota'];
+    rawRoles.sort((a, b) => {
+      const idxA = priority.indexOf(a);
+      const idxB = priority.indexOf(b);
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+    return ['All', ...rawRoles];
+  }, []);
 
   // Filter students
   const filtered = useMemo(() => {
     return students.filter((student) => {
+      const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
-        searchQuery === '' ||
-        student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.nim.includes(searchQuery) ||
-        (student.nickname?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+        q === '' ||
+        student.name.toLowerCase().includes(q) ||
+        student.nim.includes(q) ||
+        (student.alias?.toLowerCase().includes(q) ?? false) ||
+        (student.nickname?.toLowerCase().includes(q) ?? false) ||
+        (student.role?.toLowerCase().includes(q) ?? false) ||
+        (student.katakata?.toLowerCase().includes(q) ?? false);
 
       const matchesCategory =
         activeCategory === 'All' ||
-        student.interests.some((interest) =>
-          (categoryMap[activeCategory] ?? []).includes(interest)
-        );
+        student.role === activeCategory;
 
       return matchesSearch && matchesCategory;
     });
   }, [searchQuery, activeCategory]);
-
-  const handleCloseModal = useCallback(() => {
-    setSelectedStudent(null);
-  }, []);
 
   return (
     <section id="students" className="py-24 md:py-32 relative">
       <div className="container-custom">
         <SectionReveal>
           <p className="font-mono text-xs tracking-[0.25em] text-accent uppercase mb-4">
-            Digital Yearbook
+            Who's in our class?
           </p>
           <h2 className="text-fluid-heading font-heading font-bold text-text-primary mb-4">
-            The People Behind the{' '}
-            <span className="text-accent">Builds</span>
+            Teman Teman {' '}
+            <span className="text-accent">yang Mengisi Kelas Ini.</span>
           </h2>
-          <p className="text-fluid-body text-text-muted max-w-2xl mb-10">
-            {students.length} students. Each with their own stack, their own story, their own way of breaking things before making them work.
-          </p>
         </SectionReveal>
 
         <SectionReveal delay={0.1}>
@@ -72,7 +67,7 @@ export default function Students() {
             categories={categories}
             activeCategory={activeCategory}
             onCategoryChange={setActiveCategory}
-            placeholder="Search by name or NIM..."
+            placeholder="Search by name, NIM, or alias..."
           />
         </SectionReveal>
 
@@ -84,7 +79,6 @@ export default function Students() {
                 key={student.id}
                 student={student}
                 index={i}
-                onClick={() => setSelectedStudent(student)}
               />
             ))}
           </AnimatePresence>
@@ -100,9 +94,6 @@ export default function Students() {
           </div>
         )}
       </div>
-
-      {/* Modal */}
-      <StudentModal student={selectedStudent} onClose={handleCloseModal} />
     </section>
   );
 }

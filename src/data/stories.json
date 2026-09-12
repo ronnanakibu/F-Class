@@ -1,0 +1,62 @@
+[
+  {
+    "id": "story-01",
+    "mediaUrl": "/stories/story-1.jpg",
+    "mediaType": "image",
+    "caption": "Lab Mikrokontroler sampai jam 9 malam. ESP32 akhirnya nyala! 🔌✨",
+    "timestamp": "2025-09-11T21:45:00.000Z",
+    "author": "comeinone.f",
+    "category": "Praktikum",
+    "likes": 38
+  },
+  {
+    "id": "story-02",
+    "mediaUrl": "/stories/story-2.jpg",
+    "mediaType": "image",
+    "caption": "Kantin vibes setelah kuis Kalkulus yang sangat ramah bintang satu ☕🍜",
+    "timestamp": "2025-09-10T06:15:00Z",
+    "author": "comeinone.f",
+    "category": "Kantin & Chill",
+    "likes": 42
+  },
+  {
+    "id": "story-03",
+    "mediaUrl": "/stories/story-3.jpg",
+    "mediaType": "image",
+    "caption": "Suasana showcase proyek IoT kelas F. Ramai pol! 🚀⚡",
+    "timestamp": "2025-09-08T09:20:00Z",
+    "author": "comeinone.f",
+    "category": "Project IoT",
+    "likes": 56
+  },
+  {
+    "id": "story-04",
+    "mediaUrl": "/stories/story-4.jpg",
+    "mediaType": "image",
+    "caption": "Foto bareng setelah presentasi rancang bangun sistem tertanam 📸🎉",
+    "timestamp": "2025-09-05T11:30:00Z",
+    "author": "comeinone.f",
+    "category": "Event",
+    "likes": 64
+  },
+  {
+    "id": "story-05",
+    "mediaUrl": "/stories/story-5.jpg",
+    "mediaType": "image",
+    "caption": "Ketika solder kepanasan dan resistor berasap di meja lab 3 🔥💀",
+    "timestamp": "2025-09-02T15:10:00Z",
+    "author": "comeinone.f",
+    "category": "Chaos",
+    "likes": 49
+  },
+  {
+    "id": "story-06",
+    "mediaUrl": "/stories/story-6.jpg",
+    "mediaType": "image",
+    "caption": "Coding session algoritma pemrograman sampai AC lab mati 💻🌙",
+    "timestamp": "2025-08-28T18:40:00Z",
+    "author": "comeinone.f",
+    "category": "Praktikum",
+    "likes": 51
+  }
+]

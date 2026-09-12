@@ -1,14 +1,17 @@
 export interface Student {
-  id: string;
+  id: string | number;
   name: string;
   nim: string;
+  alias?: string;
   nickname?: string;
   role?: string;
   photo?: string;
+  instagram?: string;
+  katakata?: string;
   quote?: string;
-  interests: string[];
-  skills: string[];
-  socials: {
+  interests?: string[];
+  skills?: string[];
+  socials?: {
     github?: string;
     instagram?: string;
     linkedin?: string;
@@ -33,6 +36,8 @@ export interface Project {
   team: string[];
   repoUrl?: string;
   demoUrl?: string;
+  image?: string;
+  featured?: boolean;
 }
 
 export interface TimelineEvent {
@@ -64,3 +69,46 @@ export interface ClassInfo {
     practicumHours: number;
   };
 }
+
+export interface SlideItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  date: string;
+  semester: number;
+  tag: string;
+  description: string;
+  mediaUrl: string;
+  mediaType: 'image' | 'video';
+  accentColor?: string;
+}
+
+export interface IGStory {
+  id: string;
+  mediaUrl: string;
+  mediaType: 'image' | 'video';
+  caption?: string;
+  timestamp: string;
+  author?: string;
+  category?: string;
+  igStoryId?: string;
+  source?: string;
+  likes?: number;
+}
+
+export interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  album?: string;
+  coverUrl: string;
+  audioUrl?: string;
+  spotifyUrl?: string;
+  appleMusicUrl?: string;
+  suggestedBy: string;
+  studentId?: string | number;
+  note?: string;
+  category?: string;
+  addedAt: string;
+}
+

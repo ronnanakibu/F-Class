@@ -1,22 +1,21 @@
 import type { ClassInfo } from '@/types';
+import { students } from './students';
 
 export const classInfo: ClassInfo = {
   className: 'Class F',
   classCode: 'CE — F',
   tagline: 'Circuits, Code, and Chaos.',
-  department: 'Jurusan Teknik Komputer dan Informatika (JTKI)',
+  department: 'Jurusan Teknik Komputer dan Informatika (KI)',
   institution: 'Politeknik Negeri Medan',
-  batch: 'Angkatan 2024',
-  year: 2024,
+  batch: 'Angkatan 2025',
+  year: 2025,
   description:
-    'We are Class F — a collective of Computer Engineering students at Politeknik Negeri Medan. We solder, we code, we debug at 3 AM, and we build things that actually work. From embedded systems to full-stack platforms, our classroom is wherever the terminal is open.',
+    'Kami adalah kelas F dari Program Studi Teknik Komputer Politeknik Negeri Medan, Angkatan 2025. Datang dari berbagai daerah dan disatukan di sini, kami punya satu tujuan: belajar bertumbuh, dan merintis jalan menuju masa depan yang kami impikan.',
   socials: {
-    instagram: 'https://instagram.com/cef.polmed',
-    github: 'https://github.com/ce-f-polmed',
-    whatsapp: 'https://chat.whatsapp.com/',
+    instagram: 'https://instagram.com/comeinone.f'
   },
   stats: {
-    totalStudents: 30,
+    totalStudents: students.length,
     activeProjects: 12,
     practicumHours: 1440,
   },

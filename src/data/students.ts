@@ -1,139 +1,42 @@
 import type { Student } from '@/types';
+import rawData from '../../data mahasiswa.json';
 
-export const students: Student[] = [
-  {
-    id: 'std-01',
-    name: 'Ahmad Rizky Pratama',
-    nim: '2215001',
-    nickname: 'Rizky',
-    role: 'Ketua Kelas',
-    quote: 'Leadership is just debugging people.',
-    interests: ['Embedded Systems', 'IoT', 'Robotics'],
-    skills: ['C/C++', 'Arduino', 'PCB Design', 'Python'],
-    socials: {
-      github: 'https://github.com/',
-      instagram: 'https://instagram.com/',
-      linkedin: 'https://linkedin.com/in/',
-    },
+interface RawStudentItem {
+  id: number | string;
+  name: string;
+  nim: string;
+  alias?: string;
+  nickname?: string;
+  role?: string;
+  instagram?: string;
+  katakata?: string;
+  quote?: string;
+  photo?: string;
+  interests?: string[];
+  skills?: string[];
+  socials?: {
+    github?: string;
+    instagram?: string;
+    linkedin?: string;
+  };
+}
+
+export const students: Student[] = (rawData as RawStudentItem[]).map((item) => ({
+  id: String(item.id),
+  name: item.name,
+  nim: item.nim,
+  alias: item.alias,
+  nickname: item.alias || item.nickname || '',
+  role: item.role || 'Anggota',
+  instagram: item.instagram || item.socials?.instagram || '',
+  katakata: item.katakata,
+  quote: item.katakata || item.quote || '',
+  photo: item.photo,
+  interests: item.interests || [],
+  skills: item.skills || [],
+  socials: {
+    ...item.socials,
+    instagram: item.instagram || item.socials?.instagram || '',
   },
-  {
-    id: 'std-02',
-    name: 'Siti Nurhaliza Siregar',
-    nim: '2215002',
-    nickname: 'Haliza',
-    role: 'Sekretaris',
-    quote: 'Organized chaos is still organized.',
-    interests: ['Web Development', 'UI/UX Design', 'Data Science'],
-    skills: ['React', 'TypeScript', 'Figma', 'Python'],
-    socials: {
-      github: 'https://github.com/',
-      instagram: 'https://instagram.com/',
-    },
-  },
-  {
-    id: 'std-03',
-    name: 'Muhammad Fadlan Harahap',
-    nim: '2215003',
-    nickname: 'Fadlan',
-    role: 'Bendahara',
-    quote: 'Counting bytes and budgets since 2024.',
-    interests: ['Network Security', 'Linux Administration', 'Cloud Computing'],
-    skills: ['Linux', 'Bash', 'Docker', 'Networking'],
-    socials: {
-      github: 'https://github.com/',
-      linkedin: 'https://linkedin.com/in/',
-    },
-  },
-  {
-    id: 'std-04',
-    name: 'Dewi Anggraini Nasution',
-    nim: '2215004',
-    nickname: 'Dewi',
-    role: 'Hardware Lead',
-    quote: 'If it smokes, you connected it wrong.',
-    interests: ['FPGA', 'Digital Electronics', 'Embedded Systems'],
-    skills: ['VHDL', 'Verilog', 'Soldering', 'Oscilloscope'],
-    socials: {
-      instagram: 'https://instagram.com/',
-    },
-  },
-  {
-    id: 'std-05',
-    name: 'Budi Santoso Lubis',
-    nim: '2215005',
-    nickname: 'Budi',
-    quote: 'Sleep is for those who don\'t have deadlines.',
-    interests: ['Machine Learning', 'Computer Vision', 'AI'],
-    skills: ['Python', 'TensorFlow', 'OpenCV', 'NumPy'],
-    socials: {
-      github: 'https://github.com/',
-      instagram: 'https://instagram.com/',
-      linkedin: 'https://linkedin.com/in/',
-    },
-  },
-  {
-    id: 'std-06',
-    name: 'Putri Ramadhani Tarigan',
-    nim: '2215006',
-    nickname: 'Putri',
-    role: 'Creative Lead',
-    quote: 'Design is not decoration — it\'s communication.',
-    interests: ['Web Development', 'Graphic Design', 'Photography'],
-    skills: ['Next.js', 'Tailwind CSS', 'Photoshop', 'Figma'],
-    socials: {
-      github: 'https://github.com/',
-      instagram: 'https://instagram.com/',
-    },
-  },
-  {
-    id: 'std-07',
-    name: 'Rendi Wahyu Simbolon',
-    nim: '2215007',
-    nickname: 'Rendi',
-    quote: 'One more push and it\'ll work. Famous last words.',
-    interests: ['IoT', 'Smart Home', 'Microcontrollers'],
-    skills: ['ESP32', 'MQTT', 'Node.js', 'Firebase'],
-    socials: {
-      github: 'https://github.com/',
-    },
-  },
-  {
-    id: 'std-08',
-    name: 'Indah Permata Sari',
-    nim: '2215008',
-    nickname: 'Indah',
-    quote: 'Documentation today saves confusion tomorrow.',
-    interests: ['Database Systems', 'Backend Engineering', 'DevOps'],
-    skills: ['PostgreSQL', 'Go', 'Docker', 'Kubernetes'],
-    socials: {
-      github: 'https://github.com/',
-      linkedin: 'https://linkedin.com/in/',
-    },
-  },
-  {
-    id: 'std-09',
-    name: 'Farhan Dwitama Ginting',
-    nim: '2215009',
-    nickname: 'Farhan',
-    quote: 'The best error message is the one you never see.',
-    interests: ['Cybersecurity', 'Reverse Engineering', 'CTF'],
-    skills: ['Python', 'Wireshark', 'Burp Suite', 'Assembly'],
-    socials: {
-      github: 'https://github.com/',
-      instagram: 'https://instagram.com/',
-    },
-  },
-  {
-    id: 'std-10',
-    name: 'Aisyah Fitri Damanik',
-    nim: '2215010',
-    nickname: 'Aisyah',
-    quote: 'Ctrl+Z is the most powerful undo in life.',
-    interests: ['Mobile Development', 'AR/VR', 'Game Development'],
-    skills: ['Flutter', 'Dart', 'Unity', 'C#'],
-    socials: {
-      instagram: 'https://instagram.com/',
-      linkedin: 'https://linkedin.com/in/',
-    },
-  },
-];
+}));
+

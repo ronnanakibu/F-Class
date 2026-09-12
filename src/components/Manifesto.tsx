@@ -73,11 +73,10 @@ export default function Manifesto() {
         <SectionReveal>
           <div className="max-w-3xl mx-auto mb-20">
             <p className="font-mono text-xs tracking-[0.25em] text-accent uppercase mb-6">
-              Who We Are
+              Siapa Kami?
             </p>
             <h2 className="text-fluid-heading font-heading font-bold text-text-primary mb-8">
-              Not just a class.{' '}
-              <span className="text-accent">A collective.</span>
+              Kami Juga Masih Mencari <span className="text-accent">Jati Diri </span> Kami.
             </h2>
             <p className="text-fluid-body text-text-muted leading-relaxed">
               {classInfo.description}

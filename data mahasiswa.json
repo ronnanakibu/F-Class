@@ -1,0 +1,167 @@
+[
+    {
+        "id": 1,
+        "name": "Ahmad Azwar",
+        "nim": "2505112042",
+        "alias": "Met, Pak Haji, Komting, Brokoli, War",
+        "role": "Komting",
+        "katakata": "Kalau bisa nanti kenapa tidak?",
+        "photo": "/students/1.jpeg"
+    },
+    {
+        "id": 2,
+        "name": "Ayu Andita Andre",
+        "nim": "2505112012",
+        "alias": "Dit, Adit, Dita",
+        "role": "Anggota",
+        "katakata": "Mau Eek"
+    },
+    {
+        "id": 3,
+        "name": "Beauty Louis Fernanda Aritonang",
+        "nim": "2505112139",
+        "alias": "Beauty,Byut,Biti",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 4,
+        "name": "Christian Sembiring",
+        "nim": "2505112024",
+        "alias": "Sen",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 5,
+        "name": "Clara Lisa Oktaviani S",
+        "nim": "2505112085",
+        "alias": "Clar, Cla, Bu Bendahara",
+        "role": "Bendahara",
+        "katakata": ""
+    },
+    {
+        "id": 6,
+        "name": "Dominica br Kacaribu",
+        "nim": "2505112145",
+        "alias": "Dominic, Domi, Dom",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 7,
+        "name": "Drika Marbun",
+        "nim": "2505112006",
+        "alias": "Drik, Driko",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 8,
+        "name": "Gideon Boloni Siahaan",
+        "nim": "2505112115",
+        "alias": "Gid, Giden, Gi, Gideon Sang Boloni",
+        "role": "Anggota",
+        "katakata": "",
+        "photo": "/students/8.jpeg"
+    },
+    {
+        "id": 9,
+        "name": "Jennifer Kasih Silalahi",
+        "nim": "2505112157",
+        "alias": "Jenn, Jeni",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 10,
+        "name": "Johannes K Tambunan",
+        "nim": "2505112073",
+        "alias": "Joo, Jojo, Jonnes, Jojo Tambun, Jojo Plat Jambi",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 11,
+        "name": "Julita Kirana Zega",
+        "nim": "2505112127",
+        "alias": "Jul, Juli",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 12,
+        "name": "Khairul Rizal",
+        "nim": "2505112151",
+        "alias": "Rizal",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 13,
+        "name": "Khayla Maharani",
+        "nim": "2505112030",
+        "alias": "Kay, Key, Tembung, Madam",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 14,
+        "name": "Lasko Januar Sirait",
+        "nim": "2505112048",
+        "alias": "Ko, Disco, Lasco, Marelan Boy, CEO Sawit",
+        "role": "Wakil Komting",
+        "katakata": "",
+        "photo": "/students/14.png"
+    },
+    {
+        "id": 15,
+        "name": "Lorena Reginta Hasibuan",
+        "nim": "2505112109",
+        "alias": "Lor",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 16,
+        "name": "Nazwa Hafiza Putri",
+        "nim": "2505112066",
+        "alias": "Naz",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 17,
+        "name": "Nuansa Uli Agustin Sembiring",
+        "nim": "2505112121",
+        "alias": "Nuan, Sa",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 18,
+        "name": "Queenna Rassya Sanana",
+        "nim": "2505112103",
+        "alias": "Queen, Queena, Kin",
+        "role": "Anggota",
+        "katakata": ""
+    },
+    {
+        "id": 19,
+        "name": "Rony Imanuel Sihombing",
+        "nim": "2505112097",
+        "alias": "Ronn",
+        "role": "Sekretaris",
+        "instagram": "ronnlbtrn_",
+        "katakata": "Serang jantungmu sebelum jantungmu menyerangmu",
+        "photo": "/students/19.jpg"
+    },
+    {
+        "id": 20,
+        "name": "Siti Aulia Sinulingga",
+        "nim": "2505112054",
+        "alias": "Sit, Lia",
+        "role": "Anggota",
+        "katakata": ""
+    }
+]

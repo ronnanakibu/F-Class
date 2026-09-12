@@ -1,0 +1,95 @@
+import type { SlideItem } from '@/types';
+
+export const slides: SlideItem[] = [
+  {
+    id: 'slide-01',
+    title: 'Hari Pertama: The Genesis',
+    subtitle: 'Tiga puluh orang asing melangkah masuk ke ruangan yang sama.',
+    date: 'Agustus 2024',
+    semester: 1,
+    tag: 'Orientation',
+    description:
+      'Dari rasa canggung di hari pertama hingga debat tak berujung tentang bahasa pemrograman terbaik. Titik mula terbentuknya keluarga Computer Engineering F.',
+    mediaUrl: '/gallery/slide-orientation.jpg',
+    mediaType: 'image',
+    accentColor: '#3b82f6',
+  },
+  {
+    id: 'slide-02',
+    title: 'Lab Logika Digital & Breadboard',
+    subtitle: 'Gerbang logika, komponen terbakar, dan aroma solder pertama.',
+    date: 'September 2024',
+    semester: 1,
+    tag: 'Hardware Lab',
+    description:
+      'Gerbang AND, OR, kabel jumper semrawut, dan kepuasan luar biasa saat satu LED kecil menyala sesuai tabel kebenaran. Fondasi rekayasa komputer dimulai dari sini.',
+    mediaUrl: '/gallery/slide-digital-logic.jpg',
+    mediaType: 'image',
+    accentColor: '#10b981',
+  },
+  {
+    id: 'slide-03',
+    title: 'Praktikum Pemrograman Dasar',
+    subtitle: 'Segmentation fault dan perburuan titik koma hingga larut.',
+    date: 'Oktober 2024',
+    semester: 1,
+    tag: 'Coding Lab',
+    description:
+      'Hello World hanyalah prolog. Perulangan bersarang, pointer C, dan algoritma sorting membuat malam-malam terasa singkat. Di sinilah mental programmer diuji.',
+    mediaUrl: '/gallery/slide-programming.jpg',
+    mediaType: 'image',
+    accentColor: '#f59e0b',
+  },
+  {
+    id: 'slide-04',
+    title: 'UAS Semester 1: We Survived',
+    subtitle: 'Empat ujian dalam lima hari. Grup chat tembus 2.000 pesan.',
+    date: 'Januari 2025',
+    semester: 1,
+    tag: 'Milestone',
+    description:
+      'Sesi belajar marathon di kosan dan Discord hingga subuh. Satu semester terlewati dengan penuh tawa, keringat, dan solidaritas tanpa batas.',
+    mediaUrl: '/gallery/slide-uas.jpg',
+    mediaType: 'image',
+    accentColor: '#8b5cf6',
+  },
+  {
+    id: 'slide-05',
+    title: 'Era Mikrokontroler & ESP32',
+    subtitle: 'Semua benda mendadak harus dibuat "Smart".',
+    date: 'Februari 2025',
+    semester: 2,
+    tag: 'Embedded Era',
+    description:
+      'Lampu pintar, kipas pintar, sensor suhu, dan mikrokontroler di mana-mana. Kode yang kami tulis kini berinteraksi langsung dengan dunia fisik.',
+    mediaUrl: '/gallery/slide-esp32.jpg',
+    mediaType: 'image',
+    accentColor: '#ec4899',
+  },
+  {
+    id: 'slide-06',
+    title: 'IoT Showcase & Prototyping',
+    subtitle: 'Ketika cloud, sensor, dan hardware menyatu dalam satu harmoni.',
+    date: 'Maret 2025',
+    semester: 2,
+    tag: 'Showcase',
+    description:
+      'Kolaborasi tim merakit prototipe IoT nyata. Demo ke dosen dan mitra industri membuktikan bahwa ide kami bukan sekadar teori di atas kertas.',
+    mediaUrl: '/gallery/slide-iot.jpg',
+    mediaType: 'image',
+    accentColor: '#06b6d4',
+  },
+  {
+    id: 'slide-07',
+    title: 'The Journey Continues',
+    subtitle: 'Dua semester terlewati, tantangan lebih besar menanti di depan.',
+    date: 'Sekarang & Masa Depan',
+    semester: 3,
+    tag: 'Next Chapter',
+    description:
+      'Rangkaian makin kompleks, arsitektur sistem makin canggih, dan persaudaraan semakin solid. Langkah kami di Computer Engineering baru saja dimulai.',
+    mediaUrl: '/gallery/slide-future.jpg',
+    mediaType: 'image',
+    accentColor: '#3b82f6',
+  },
+];

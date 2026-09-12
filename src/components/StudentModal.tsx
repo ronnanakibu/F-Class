@@ -124,7 +124,7 @@ export default function StudentModal({ student, onClose }: StudentModalProps) {
               )}
 
               {/* Skills */}
-              {student.skills.length > 0 && (
+              {student.skills && student.skills.length > 0 && (
                 <div>
                   <p className="font-mono text-[10px] tracking-[0.2em] text-text-dim uppercase mb-3">
                     Skills
@@ -143,7 +143,7 @@ export default function StudentModal({ student, onClose }: StudentModalProps) {
               )}
 
               {/* Interests */}
-              {student.interests.length > 0 && (
+              {student.interests && student.interests.length > 0 && (
                 <div>
                   <p className="font-mono text-[10px] tracking-[0.2em] text-text-dim uppercase mb-3">
                     Interests
@@ -162,7 +162,7 @@ export default function StudentModal({ student, onClose }: StudentModalProps) {
               )}
 
               {/* Social Links */}
-              {(student.socials.github || student.socials.instagram || student.socials.linkedin) && (
+              {student.socials && (student.socials.github || student.socials.instagram || student.socials.linkedin) && (
                 <div>
                   <p className="font-mono text-[10px] tracking-[0.2em] text-text-dim uppercase mb-3">
                     Connect

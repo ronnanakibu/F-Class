@@ -1,0 +1,26 @@
+[
+  {
+    "id": "prj-englishquest",
+    "title": "EnglishQuest — Interactive Learning Platform",
+    "category": "Web",
+    "description": "Platform interaktif gamifikasi pembelajaran Bahasa Inggris modern berbasis web dengan kuis dinamis, pelacakan progres belajar, dan antarmuka imersif.",
+    "techStack": ["Next.js", "React", "TypeScript", "Tailwind CSS", "Vercel"],
+    "team": ["Ronn (Lead Dev)"],
+    "repoUrl": "https://github.com/ronnanakibu/englishquest",
+    "demoUrl": "https://englishquest-web.vercel.app/",
+    "image": "/projects/englishquest.jpg",
+    "featured": true
+  },
+  {
+    "id": "prj-whatsapp-bot",
+    "title": "WhatsApp Bots (WABOT2.0 Multi-Device Engine)",
+    "category": "AI",
+    "description": "Bot otomatisasi WhatsApp multi-device berperforma tinggi untuk asisten kelas, downloader media sosial, sinkronisasi story IG kelas ke web, dan utilitas pintar kampus.",
+    "techStack": ["Node.js", "Baileys", "JavaScript", "REST API", "Automation"],
+    "team": ["Ronn (Lead Dev)"],
+    "repoUrl": "https://github.com/ronnanakibu/Whatsapp-Bots",
+    "demoUrl": "https://wa.me/+6285188742549?text=.p",
+    "image": "/projects/whatsapp-bot.jpg",
+    "featured": true
+  }
+]

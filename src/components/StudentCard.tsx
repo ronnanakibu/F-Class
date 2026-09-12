@@ -1,53 +1,99 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Student } from '@/types';
 import { getInitials, stringToHue } from '@/lib/utils';
+import { IconInstagram } from './BrandIcons';
 
 interface StudentCardProps {
   student: Student;
   index: number;
-  onClick: () => void;
 }
 
-export default function StudentCard({ student, index, onClick }: StudentCardProps) {
+export default function StudentCard({ student, index }: StudentCardProps) {
   const hue = stringToHue(student.name);
+  const quoteText = student.katakata || student.quote;
+
+  // Validation: Only attempt to load image if student.photo exists and is not empty
+  const hasPhotoConfigured = Boolean(student.photo && student.photo.trim() !== '');
+  const [imgError, setImgError] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  // Show photo only if configured and no load error occurred
+  const showPhoto = hasPhotoConfigured && !imgError;
+
+  // Highlight leadership roles
+  const isLeadership =
+    student.role &&
+    ['Komting', 'Wakil Komting', 'Sekretaris', 'Bendahara'].includes(student.role);
+
+  // Instagram URL parsing
+  const igRaw = student.instagram || student.socials?.instagram;
+  let instagramUrl: string | null = null;
+  let instagramHandle: string | null = null;
+
+  if (igRaw && igRaw.trim() !== '') {
+    const clean = igRaw.trim();
+    if (clean.startsWith('http://') || clean.startsWith('https://')) {
+      instagramUrl = clean;
+      const match = clean.match(/instagram\.com\/([^/?#]+)/i);
+      instagramHandle = match ? match[1] : 'instagram';
+    } else {
+      const handle = clean.replace(/^@/, '');
+      instagramUrl = `https://instagram.com/${handle}`;
+      instagramHandle = handle;
+    }
+  }
 
   return (
-    <motion.button
-      initial={{ opacity: 0, y: 30 }}
+    <motion.div
+      initial={{ opacity: 0, y: 25 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10, transition: { duration: 0.2 } }}
+      exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
       transition={{
-        duration: 0.5,
-        delay: index * 0.05,
+        duration: 0.4,
+        delay: Math.min(index * 0.03, 0.4),
         ease: [0.25, 0.46, 0.45, 0.94] as const,
       }}
       layout
-      onClick={onClick}
-      className="group relative flex flex-col items-center p-6 rounded-2xl border border-border bg-bg-elevated/60 hover:border-border-accent hover:bg-bg-surface/60 transition-all duration-300 cursor-pointer text-left w-full"
+      className={`group relative flex flex-col items-center p-5 rounded-2xl border transition-all duration-300 w-full ${
+        isLeadership
+          ? 'border-accent/40 bg-bg-elevated/80 shadow-[0_0_20px_rgba(59,130,246,0.06)]'
+          : 'border-border bg-bg-elevated/50 hover:border-border-accent/60 hover:bg-bg-surface/60'
+      }`}
     >
-      {/* Avatar */}
+      {/* Avatar Container with Inisial Fallback */}
       <div
-        className="w-20 h-20 rounded-full flex items-center justify-center mb-4 text-xl font-heading font-bold border-2 border-transparent group-hover:border-accent/30 transition-all duration-300"
+        className="w-18 h-18 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mb-3 text-lg sm:text-xl font-heading font-bold border-2 border-transparent group-hover:border-accent/40 transition-all duration-300 shadow-inner overflow-hidden select-none relative"
         style={{
           backgroundColor: `hsl(${hue}, 40%, 18%)`,
-          color: `hsl(${hue}, 60%, 65%)`,
+          color: `hsl(${hue}, 60%, 68%)`,
         }}
       >
-        {student.photo ? (
+        {/* Render initials as base or fallback */}
+        {(!showPhoto || !imgLoaded) && (
+          <span className="font-heading font-bold text-lg sm:text-xl tracking-wider select-none">
+            {getInitials(student.name)}
+          </span>
+        )}
+
+        {/* Render photo only if configured in data */}
+        {showPhoto && (
           <img
             src={student.photo}
-            alt={student.name}
-            className="w-full h-full rounded-full object-cover"
+            alt=""
+            onLoad={() => setImgLoaded(true)}
+            onError={() => setImgError(true)}
+            className={`absolute inset-0 w-full h-full rounded-full object-cover transition-opacity duration-300 ${
+              imgLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
           />
-        ) : (
-          getInitials(student.name)
         )}
       </div>
 
       {/* NIM */}
-      <span className="font-mono text-[10px] tracking-[0.15em] text-text-dim mb-2 uppercase">
+      <span className="font-mono text-[11px] tracking-[0.15em] text-text-dim mb-1.5 uppercase">
         {student.nim}
       </span>
 
@@ -56,23 +102,50 @@ export default function StudentCard({ student, index, onClick }: StudentCardProp
         {student.name}
       </h3>
 
-      {/* Role Badge */}
-      {student.role && (
-        <span className="inline-block px-2.5 py-0.5 text-[10px] font-mono tracking-wider text-accent bg-accent-dim/40 rounded-full mt-1 uppercase">
-          {student.role}
-        </span>
+      {/* Alias */}
+      {student.alias && (
+        <p className="text-[11px] text-text-muted text-center mb-1.5 font-mono line-clamp-1" title={student.alias}>
+          aka &ldquo;{student.alias}&rdquo;
+        </p>
       )}
 
-      {/* Quote (on hover) */}
-      {student.quote && (
-        <div className="absolute inset-x-0 -bottom-2 opacity-0 group-hover:opacity-100 group-hover:bottom-0 transition-all duration-300 pointer-events-none">
-          <div className="mx-3 px-3 py-2 bg-bg-primary/95 border border-border rounded-lg">
-            <p className="text-[11px] text-text-muted italic text-center leading-snug">
-              &ldquo;{student.quote}&rdquo;
-            </p>
-          </div>
+      {/* Role Badge & Instagram Handle */}
+      <div className="flex items-center gap-1.5 flex-wrap justify-center mt-1">
+        {student.role && (
+          <span
+            className={`inline-block px-2.5 py-0.5 text-[10px] font-mono tracking-wider rounded-full uppercase ${
+              isLeadership
+                ? 'text-accent bg-accent/15 border border-accent/30 font-semibold'
+                : 'text-text-muted bg-bg-surface border border-border'
+            }`}
+          >
+            {student.role}
+          </span>
+        )}
+
+        {instagramUrl && (
+          <a
+            href={instagramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/20 hover:border-pink-500/40 text-pink-400 hover:text-pink-300 text-[10px] font-mono transition-all group/ig"
+            title={`Instagram @${instagramHandle}`}
+          >
+            <IconInstagram size={11} className="group-hover/ig:scale-110 transition-transform" />
+            <span className="truncate max-w-[100px]">@{instagramHandle}</span>
+          </a>
+        )}
+      </div>
+
+      {/* Quote / Katakata */}
+      {quoteText && (
+        <div className="mt-3 pt-3 border-t border-border/40 w-full text-center">
+          <p className="text-[11px] text-text-muted italic leading-relaxed">
+            &ldquo;{quoteText}&rdquo;
+          </p>
         </div>
       )}
-    </motion.button>
+    </motion.div>
   );
 }

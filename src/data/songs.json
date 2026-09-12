@@ -1,0 +1,58 @@
+[
+  {
+    "id": "song-1",
+    "title": "High School in Jakarta",
+    "artist": "NIKI",
+    "album": "Nicole",
+    "coverUrl": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/6e/ff/43/6eff434b-8a53-3704-41d9-9cf34cb57f41/190296083709.jpg/600x600bb.jpg",
+    "audioUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/ce/11/f3/ce11f396-9ebe-30fc-95ec-71bc3adce657/mzaf_18058958338436207223.plus.aac.p.m4a",
+    "spotifyUrl": "https://open.spotify.com/search/High%20School%20in%20Jakarta%20NIKI",
+    "appleMusicUrl": "https://music.apple.com/us/album/high-school-in-jakarta/1766372607?i=1766372615&uo=4",
+    "suggestedBy": "Ronn",
+    "note": "Lagu santai pas lagi ngerjain portfolio & ngoding proyek web",
+    "category": "Chill & Study",
+    "addedAt": "2026-09-12T09:31:24.921Z"
+  },
+  {
+    "id": "song-2",
+    "title": "Evaluasi",
+    "artist": "Hindia",
+    "album": "Evaluasi - Single",
+    "coverUrl": "https://is1-ssl.mzstatic.com/image/thumb/Music123/v4/83/f6/8f/83f68f0a-8a30-9653-a3e2-dc37d9714946/cover.jpg/600x600bb.jpg",
+    "audioUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/3f/76/8b/3f768b2d-8843-f368-9235-78b3e3fe9871/mzaf_10478617535469036592.plus.aac.p.m4a",
+    "spotifyUrl": "https://open.spotify.com/search/Evaluasi%20Hindia",
+    "appleMusicUrl": "https://music.apple.com/us/album/evaluasi/1456264899?i=1456264904&uo=4",
+    "suggestedBy": "Daffa",
+    "note": "Lagu penenang pas revisi laporan praktikum numpuk",
+    "category": "Galau Praktikum",
+    "addedAt": "2026-09-12T09:31:25.142Z"
+  },
+  {
+    "id": "song-4",
+    "title": "Bohemian Rhapsody",
+    "artist": "Queen",
+    "album": "Greatest Hits I, II & III: The Platinum Collection",
+    "coverUrl": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/4d/08/2a/4d082a9e-7898-1aa1-a02f-339810058d9e/14DMGIM05632.rgb.jpg/600x600bb.jpg",
+    "audioUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/8f/11/52/8f1152a9-fd5f-0021-f546-b97579c22ec3/mzaf_3962258993076347789.plus.aac.p.m4a",
+    "spotifyUrl": "https://open.spotify.com/search/Bohemian%20Rhapsody%20Queen",
+    "appleMusicUrl": "https://music.apple.com/us/album/bohemian-rhapsody/1440650428?i=1440650711&uo=4",
+    "suggestedBy": "Kebangsaan Kelas F",
+    "note": "Lagu kebersamaan dan karaoke anak Kelas F",
+    "category": "Class Anthem",
+    "addedAt": "2026-09-12T09:31:25.574Z"
+  },
+  {
+    "id": "song-3",
+    "title": "Hati-Hati di Jalan",
+    "artist": "Tulus",
+    "album": "Manusia",
+    "coverUrl": "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/6f/18/10/6f1810e0-2d6a-a456-1362-de607c70408a/cover.jpg/600x600bb.jpg",
+    "audioUrl": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/bb/50/cd/bb50cd11-dbbc-f84e-1244-f1b786af7ab4/mzaf_15441108959417505948.plus.aac.p.m4a",
+    "spotifyUrl": "https://open.spotify.com/search/Hati-Hati%20di%20Jalan%20Tulus",
+    "appleMusicUrl": "https://music.apple.com/us/album/hati-hati-di-jalan/1612163750?i=1612164667&uo=4",
+    "suggestedBy": "Ahmad",
+    "note": "Lagu pulang praktikum sore sambil naik motor",
+    "category": "Road Trip",
+    "addedAt": "2026-09-12T09:31:36.240Z"
+  }
+]
