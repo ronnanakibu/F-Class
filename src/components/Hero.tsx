@@ -1,11 +1,32 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 
 export default function Hero() {
-  const headlinePart1 = ['KELAS', 'YANG', 'ISINYA'];
-  const headlinePart2 = ['LITTLE', 'LITTLE', 'GAGAP.'];
+  const [heroContent, setHeroContent] = useState({
+    headlinePart1: 'KELAS YANG ISINYA',
+    headlinePart2: 'LITTLE LITTLE GAGAP.',
+    subtitle: 'Computer Engineering — Class F',
+    badgeCode: 'CE — F',
+    badgeLabel: 'TK-F POLMED',
+    mockupImage: '/hero-mockup.jpg',
+  });
+
+  useEffect(() => {
+    fetch('/api/site-content')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.content?.hero) {
+          setHeroContent((prev) => ({ ...prev, ...data.content.hero }));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const headlinePart1 = heroContent.headlinePart1.split(' ');
+  const headlinePart2 = heroContent.headlinePart2.split(' ');
 
   const container = {
     hidden: { opacity: 0 },
@@ -46,7 +67,7 @@ export default function Hero() {
         {/* Mockup Background Image */}
         <div
           className="absolute inset-0 bg-cover bg-center scale-105 transition-transform duration-1000 opacity-30 dark:opacity-25"
-          style={{ backgroundImage: "url('/hero-mockup.jpg')" }}
+          style={{ backgroundImage: `url('${heroContent.mockupImage || "/hero-mockup.jpg"}')` }}
           aria-hidden="true"
         />
 
@@ -62,7 +83,7 @@ export default function Hero() {
         {/* Subtle Background Typographic Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden opacity-[0.03] dark:opacity-[0.05]">
           <span className="font-heading font-black text-[12vw] tracking-tighter uppercase whitespace-nowrap text-text-primary">
-            LITTLE LITTLE GAGAP
+            {heroContent.headlinePart2 || 'LITTLE LITTLE GAGAP'}
           </span>
         </div>
       </div>
@@ -78,11 +99,11 @@ export default function Hero() {
         >
           <div className="inline-flex items-center gap-3 px-5 py-2.5 border border-border-accent rounded-full bg-accent-dim/30 backdrop-blur-sm">
             <span className="font-mono text-sm tracking-[0.2em] text-accent font-semibold">
-              CE — F
+              {heroContent.badgeCode}
             </span>
             <span className="w-px h-4 bg-border-accent" />
             <span className="font-mono text-xs tracking-wider text-text-muted uppercase">
-              TK-F POLMED
+              {heroContent.badgeLabel}
             </span>
           </div>
         </motion.div>
@@ -127,7 +148,7 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.9 }}
           className="text-fluid-body text-text-muted max-w-xl mx-auto mb-12 font-body"
         >
-          Computer Engineering — Class F
+          {heroContent.subtitle}
           <br />
           <span className="text-text-dim">
             Jurusan Teknik Komputer dan Informatika • Politeknik Negeri Medan

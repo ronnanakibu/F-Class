@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { readStorageFile, writeStorageFile } from '@/lib/serverStorage';
 
 const STUDENTS_DIR = path.join(process.cwd(), 'public', 'students');
-const DATA_FILE_PATH = path.join(process.cwd(), 'data mahasiswa.json');
+const RELATIVE_DATA_PATH = 'data mahasiswa.json';
 
 // POST: Upload photo for student ID or save external photo URL
 export async function POST(request: Request) {
   try {
     const contentType = request.headers.get('content-type') || '';
-
-    // Ensure public/students directory exists
-    await fs.mkdir(STUDENTS_DIR, { recursive: true });
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData();
@@ -39,48 +37,56 @@ export async function POST(request: Request) {
       else if (originalName.endsWith('.webp') || file.type === 'image/webp') ext = '.webp';
       else if (originalName.endsWith('.jpeg')) ext = '.jpeg';
 
-      // Clean up previous files for this student ID to avoid duplicate extensions
-      const existingFiles = await fs.readdir(STUDENTS_DIR);
-      for (const f of existingFiles) {
-        if (f.startsWith(`${id}.`)) {
-          try {
-            await fs.unlink(path.join(STUDENTS_DIR, f));
-          } catch {
-            // ignore
-          }
-        }
-      }
-
-      // Convert file buffer and save
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
-      const targetFilename = `${id}${ext}`;
-      const targetFilePath = path.join(STUDENTS_DIR, targetFilename);
+      let photoUrl = '';
 
-      await fs.writeFile(targetFilePath, buffer);
-
-      const publicUrl = `/students/${targetFilename}`;
-
-      // Automatically update photo field in data mahasiswa.json
+      // Try saving physical file to public/students/
       try {
-        const rawContent = await fs.readFile(DATA_FILE_PATH, 'utf-8');
+        await fs.mkdir(STUDENTS_DIR, { recursive: true });
+
+        // Clean up previous files for this student ID
+        try {
+          const existingFiles = await fs.readdir(STUDENTS_DIR);
+          for (const f of existingFiles) {
+            if (f.startsWith(`${id}.`)) {
+              await fs.unlink(path.join(STUDENTS_DIR, f)).catch(() => {});
+            }
+          }
+        } catch {
+          // ignore
+        }
+
+        const targetFilename = `${id}${ext}`;
+        const targetFilePath = path.join(STUDENTS_DIR, targetFilename);
+        await fs.writeFile(targetFilePath, buffer);
+        photoUrl = `/students/${targetFilename}`;
+      } catch (writeErr: any) {
+        // Fallback for Vercel Serverless EROFS: Convert to Base64 data URL
+        console.info(`[PhotoAPI] Falling back to base64 data URL due to read-only filesystem (${writeErr.code || writeErr.message})`);
+        const mimeType = file.type || 'image/jpeg';
+        photoUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
+      }
+
+      // Automatically update photo field in data mahasiswa.json via serverStorage
+      try {
+        const rawContent = await readStorageFile(RELATIVE_DATA_PATH, '[]');
         const students = JSON.parse(rawContent);
         const updated = students.map((s: { id: number | string; photo?: string }) => {
           if (String(s.id) === String(id)) {
-            return { ...s, photo: publicUrl };
+            return { ...s, photo: photoUrl };
           }
           return s;
         });
-        await fs.writeFile(DATA_FILE_PATH, JSON.stringify(updated, null, 4), 'utf-8');
-      } catch {
-        // ignore json sync error
+        await writeStorageFile(RELATIVE_DATA_PATH, JSON.stringify(updated, null, 4));
+      } catch (syncErr) {
+        console.warn('[PhotoAPI] Error updating data mahasiswa.json:', syncErr);
       }
 
       return NextResponse.json({
         success: true,
         message: `Foto mahasiswa ID ${id} berhasil diupload!`,
-        url: publicUrl,
-        filename: targetFilename,
+        url: photoUrl,
       });
     }
 
@@ -96,7 +102,7 @@ export async function POST(request: Request) {
     }
 
     // Update the photo field in data mahasiswa.json
-    const rawContent = await fs.readFile(DATA_FILE_PATH, 'utf-8');
+    const rawContent = await readStorageFile(RELATIVE_DATA_PATH, '[]');
     const students = JSON.parse(rawContent);
     const updated = students.map((s: { id: number | string; photo?: string }) => {
       if (String(s.id) === String(id)) {
@@ -110,12 +116,12 @@ export async function POST(request: Request) {
       return s;
     });
 
-    await fs.writeFile(DATA_FILE_PATH, JSON.stringify(updated, null, 4), 'utf-8');
+    await writeStorageFile(RELATIVE_DATA_PATH, JSON.stringify(updated, null, 4));
 
     return NextResponse.json({
       success: true,
-      message: `Foto profil mahasiswa ID ${id} berhasil diperbarui!`,
-      url: photoUrl,
+      message: photoUrl ? 'URL foto berhasil diperbarui!' : 'Foto dihapus, kembali ke inisial.',
+      url: photoUrl || null,
     });
   } catch (error) {
     return NextResponse.json(
@@ -145,12 +151,12 @@ export async function DELETE(request: Request) {
         }
       }
     } catch {
-      // ignore
+      // ignore in read-only environment
     }
 
     // Clear from data mahasiswa.json so it reliably falls back to initials
     try {
-      const rawContent = await fs.readFile(DATA_FILE_PATH, 'utf-8');
+      const rawContent = await readStorageFile(RELATIVE_DATA_PATH, '[]');
       const students = JSON.parse(rawContent);
       const updated = students.map((s: { id: number | string; photo?: string }) => {
         if (String(s.id) === String(id)) {
@@ -159,7 +165,7 @@ export async function DELETE(request: Request) {
         }
         return s;
       });
-      await fs.writeFile(DATA_FILE_PATH, JSON.stringify(updated, null, 4), 'utf-8');
+      await writeStorageFile(RELATIVE_DATA_PATH, JSON.stringify(updated, null, 4));
     } catch {
       // ignore
     }

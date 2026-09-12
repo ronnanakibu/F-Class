@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { readStorageFile, writeStorageFile } from '@/lib/serverStorage';
 
-const DATA_FILE_PATH = path.join(process.cwd(), 'data mahasiswa.json');
+const RELATIVE_PATH = 'data mahasiswa.json';
 
 // GET: Fetch current student data from JSON file
 export async function GET() {
   try {
-    const rawContent = await fs.readFile(DATA_FILE_PATH, 'utf-8');
+    const rawContent = await readStorageFile(RELATIVE_PATH, '[]');
     const data = JSON.parse(rawContent);
     return NextResponse.json({ success: true, data, raw: rawContent });
   } catch (error) {
@@ -41,11 +40,13 @@ export async function POST(request: Request) {
     // Format with 4 spaces to match user's indentation
     const formatted = JSON.stringify(studentsArray, null, 4);
 
-    await fs.writeFile(DATA_FILE_PATH, formatted, 'utf-8');
+    const result = await writeStorageFile(RELATIVE_PATH, formatted);
 
     return NextResponse.json({
       success: true,
-      message: 'Data mahasiswa berhasil disimpan!',
+      isReadOnlyFs: result.isReadOnlyFs,
+      syncedCloud: result.syncedCloud,
+      message: result.message,
       count: studentsArray.length,
       data: studentsArray,
     });

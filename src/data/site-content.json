@@ -1,0 +1,22 @@
+{
+  "hero": {
+    "headlinePart1": "KELAS YANG ISINYA",
+    "headlinePart2": "LITTLE LITTLE GAGAP.",
+    "subtitle": "Computer Engineering — Class F",
+    "badgeCode": "CE — F",
+    "badgeLabel": "TK-F POLMED",
+    "mockupImage": "/hero-mockup.jpg"
+  },
+  "manifesto": {
+    "tagline": "Circuits, Code, and Chaos.",
+    "quote": "Setiap gerbang logika yang kami susun, setiap baris kode yang kami debug hingga dini hari—adalah bukti bahwa kami bukan sekadar belajar teknologi, kami membentuk masa depan.",
+    "description": "Kami adalah kelas F dari Program Studi Teknik Komputer Politeknik Negeri Medan, Angkatan 2025. Datang dari berbagai daerah dan disatukan di sini, kami punya satu tujuan: belajar bertumbuh, dan merintis jalan menuju masa depan yang kami impikan.",
+    "statProjects": 12,
+    "statHours": 1440
+  },
+  "footer": {
+    "tagline": "Circuits, Code, and Chaos.",
+    "copyright": "Class F — Computer Engineering POLMED 2025",
+    "instagramUrl": "https://instagram.com/comeinone.f"
+  }
+}

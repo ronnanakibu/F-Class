@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { MessageCircle, Terminal } from 'lucide-react';
@@ -11,6 +11,22 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
   const router = useRouter();
   const [clickCount, setClickCount] = useState(0);
+  const [footerContent, setFooterContent] = useState({
+    tagline: 'Circuits, Code, and Chaos.',
+    copyright: `© ${currentYear} ${classInfo.classCode} — ${classInfo.institution}. Crafted by CE F students.`,
+    instagramUrl: classInfo.socials.instagram,
+  });
+
+  useEffect(() => {
+    fetch('/api/site-content')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.content?.footer) {
+          setFooterContent((prev) => ({ ...prev, ...data.content.footer }));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Easter Egg trigger: click 5 times to open admin console
   const handleEasterEggClick = () => {
@@ -38,9 +54,9 @@ export default function Footer() {
 
         {/* Social Links */}
         <div className="flex items-center justify-center gap-4 mb-12">
-          {classInfo.socials.instagram && (
+          {footerContent.instagramUrl && (
             <a
-              href={classInfo.socials.instagram}
+              href={footerContent.instagramUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="p-3 rounded-xl border border-border bg-bg-surface hover:border-border-accent hover:text-accent text-text-muted transition-all duration-200 cursor-pointer"
@@ -93,8 +109,7 @@ export default function Footer() {
               className="text-xs text-text-dim font-mono text-center sm:text-right cursor-pointer hover:text-text-muted transition-colors"
               title="CE F Student Class"
             >
-              © {currentYear} {classInfo.classCode} — {classInfo.institution}.
-              Crafted by CE F students.
+              {footerContent.copyright}
             </p>
 
             {/* Subtle Terminal Easter Egg Link */}

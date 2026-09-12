@@ -22,6 +22,7 @@ import {
 const SLIDE_DURATION = 6500; // 6.5s per slide like Apple carousels
 
 export default function AppleSlideshow() {
+  const [slideItems, setSlideItems] = useState<SlideItem[]>(slides);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [isHovered, setIsHovered] = useState(false);
@@ -35,17 +36,37 @@ export default function AppleSlideshow() {
   const elapsedBeforePauseRef = useRef<number>(0);
   const touchStartXRef = useRef<number>(0);
 
-  const activeSlide: SlideItem = slides[currentIndex] || slides[0];
+  // Fetch dynamic slides from /api/journey
+  useEffect(() => {
+    fetch('/api/journey')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.slides) && data.slides.length > 0) {
+          setSlideItems(data.slides);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const activeSlide: SlideItem = slideItems[currentIndex] || slideItems[0] || slides[0];
 
   const handleNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % slides.length);
+    setSlideItems((current) => {
+      const len = current.length || 1;
+      setCurrentIndex((prev) => (prev + 1) % len);
+      return current;
+    });
     setProgress(0);
     elapsedBeforePauseRef.current = 0;
     progressStartRef.current = Date.now();
   }, []);
 
   const handlePrev = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
+    setSlideItems((current) => {
+      const len = current.length || 1;
+      setCurrentIndex((prev) => (prev - 1 + len) % len);
+      return current;
+    });
     setProgress(0);
     elapsedBeforePauseRef.current = 0;
     progressStartRef.current = Date.now();
@@ -340,8 +361,8 @@ export default function AppleSlideshow() {
 
         {/* Apple-style Segmented Timeline Progress Indicators */}
         <div className="mt-6 md:mt-8">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-2 sm:gap-3">
-            {slides.map((slide, idx) => {
+          <div className="flex flex-wrap sm:grid sm:grid-cols-4 md:grid-cols-7 gap-2 sm:gap-3">
+            {slideItems.map((slide, idx) => {
               const isActive = idx === currentIndex;
               const isPassed = idx < currentIndex;
 
@@ -480,7 +501,7 @@ export default function AppleSlideshow() {
                   <ChevronLeft size={22} />
                 </button>
                 <span className="font-mono text-xs text-text-dim">
-                  {currentIndex + 1} / {slides.length}
+                  {currentIndex + 1} / {slideItems.length}
                 </span>
                 <button
                   onClick={handleNext}

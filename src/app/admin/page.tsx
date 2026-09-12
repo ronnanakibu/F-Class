@@ -41,10 +41,15 @@ import {
   Tag,
   Music,
   Headphones,
+  Layers,
+  ChevronUp,
+  ChevronDown,
+  Download,
+  Copy,
 } from 'lucide-react';
 import { getInitials, stringToHue } from '@/lib/utils';
 import ImageCropperModal from '@/components/ImageCropperModal';
-import type { IGStory, Project, Song } from '@/types';
+import type { IGStory, Project, Song, SlideItem } from '@/types';
 
 interface Student {
   id: number | string;
@@ -73,8 +78,53 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Active Tab: 'photos' | 'students' | 'projects' | 'music' | 'stories' | 'json' | 'roadmap'
-  const [activeTab, setActiveTab] = useState<'photos' | 'students' | 'projects' | 'music' | 'stories' | 'json' | 'roadmap'>('photos');
+  // Active Tab: Unified Section Structure
+  const [activeTab, setActiveTab] = useState<'students' | 'journey' | 'projects' | 'music' | 'stories' | 'godmode' | 'roadmap'>('students');
+  // Student Sub-tabs: 'identity' (Form) | 'photos' (Foto Profil) | 'json' (Raw Code)
+  const [studentSubTab, setStudentSubTab] = useState<'identity' | 'photos' | 'json'>('identity');
+
+  // Journey Showcase State
+  const [adminSlides, setAdminSlides] = useState<SlideItem[]>([]);
+  const [isLoadingSlides, setIsLoadingSlides] = useState(false);
+  const [isSlideModalOpen, setIsSlideModalOpen] = useState(false);
+  const [editingSlide, setEditingSlide] = useState<SlideItem | null>(null);
+  const [isCreatingNewSlide, setIsCreatingNewSlide] = useState(false);
+  const [isSavingSlide, setIsSavingSlide] = useState(false);
+
+  // Slide Form State
+  const [slideTitle, setSlideTitle] = useState('');
+  const [slideSubtitle, setSlideSubtitle] = useState('');
+  const [slideTag, setSlideTag] = useState('Orientation');
+  const [slideSemester, setSlideSemester] = useState<number>(1);
+  const [slideDate, setSlideDate] = useState('');
+  const [slideDescription, setSlideDescription] = useState('');
+  const [slideMediaUrl, setSlideMediaUrl] = useState('');
+  const [slideMediaType, setSlideMediaType] = useState<'image' | 'video'>('image');
+  const [slideAccentColor, setSlideAccentColor] = useState('#3b82f6');
+
+  // God Mode (Website Content) State
+  const [godHero, setGodHero] = useState({
+    headlinePart1: 'KELAS YANG ISINYA',
+    headlinePart2: 'LITTLE LITTLE GAGAP.',
+    subtitle: 'Computer Engineering — Class F',
+    badgeCode: 'CE — F',
+    badgeLabel: 'TK-F POLMED',
+    mockupImage: '/hero-mockup.jpg',
+  });
+  const [godManifesto, setGodManifesto] = useState({
+    tagline: 'Circuits, Code, and Chaos.',
+    quote: 'Setiap gerbang logika yang kami susun, setiap baris kode yang kami debug hingga dini hari—adalah bukti bahwa kami bukan sekadar belajar teknologi, kami membentuk masa depan.',
+    description: 'Kami adalah kelas F dari Program Studi Teknik Komputer Politeknik Negeri Medan, Angkatan 2025. Datang dari berbagai daerah dan disatukan di sini, kami punya satu tujuan: belajar bertumbuh, dan merintis jalan menuju masa depan yang kami impikan.',
+    statProjects: 12,
+    statHours: 1440,
+  });
+  const [godFooter, setGodFooter] = useState({
+    tagline: 'Circuits, Code, and Chaos.',
+    copyright: 'Class F — Computer Engineering POLMED 2025',
+    instagramUrl: 'https://instagram.com/comeinone.f',
+  });
+  const [isLoadingGodMode, setIsLoadingGodMode] = useState(false);
+  const [isSavingGodMode, setIsSavingGodMode] = useState(false);
 
   // Projects State
   const [adminProjects, setAdminProjects] = useState<Project[]>([]);
@@ -256,14 +306,50 @@ export default function AdminPage() {
     }
   }, [showToast]);
 
+  // Fetch journey slides from API
+  const loadSlides = useCallback(async () => {
+    setIsLoadingSlides(true);
+    try {
+      const res = await fetch('/api/journey', { cache: 'no-store' });
+      const json = await res.json();
+      if (json.success && Array.isArray(json.slides)) {
+        setAdminSlides(json.slides);
+      }
+    } catch {
+      showToast('Gagal memuat daftar slide The Journey', 'error');
+    } finally {
+      setIsLoadingSlides(false);
+    }
+  }, [showToast]);
+
+  // Fetch God Mode site content from API
+  const loadGodContent = useCallback(async () => {
+    setIsLoadingGodMode(true);
+    try {
+      const res = await fetch('/api/site-content', { cache: 'no-store' });
+      const json = await res.json();
+      if (json.success && json.content) {
+        if (json.content.hero) setGodHero((prev) => ({ ...prev, ...json.content.hero }));
+        if (json.content.manifesto) setGodManifesto((prev) => ({ ...prev, ...json.content.manifesto }));
+        if (json.content.footer) setGodFooter((prev) => ({ ...prev, ...json.content.footer }));
+      }
+    } catch {
+      showToast('Gagal memuat konten website', 'error');
+    } finally {
+      setIsLoadingGodMode(false);
+    }
+  }, [showToast]);
+
   useEffect(() => {
     if (isAuthenticated) {
       loadData();
       loadStories();
       loadProjects();
       loadSongs();
+      loadSlides();
+      loadGodContent();
     }
-  }, [isAuthenticated, loadData, loadStories, loadProjects, loadSongs]);
+  }, [isAuthenticated, loadData, loadStories, loadProjects, loadSongs, loadSlides, loadGodContent]);
 
   const handleUploadStory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -845,6 +931,14 @@ export default function AdminPage() {
     }
   };
 
+  const handleDirectDropFile = (student: Student, file: File) => {
+    if (!file.type.startsWith('image/')) {
+      showToast('File harus berupa berkas gambar (JPG, PNG, WebP)!', 'error');
+      return;
+    }
+    startCropForStudent(student, file);
+  };
+
   const handleSavePhotoDirect = async () => {
     if (!activePhotoStudent) return;
     setIsSaving(true);
@@ -1111,6 +1205,196 @@ export default function AdminPage() {
     }
   };
 
+  // Utility to download JSON files
+  const handleDownloadJson = (content: string, filename: string) => {
+    try {
+      const blob = new Blob([content], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`Berkas ${filename} berhasil diunduh!`, 'success');
+    } catch {
+      showToast('Gagal mengunduh berkas', 'error');
+    }
+  };
+
+  // Utility to copy JSON string to clipboard
+  const handleCopyJson = (content: string) => {
+    navigator.clipboard
+      .writeText(content)
+      .then(() => showToast('Kode JSON berhasil disalin ke clipboard!', 'success'))
+      .catch(() => showToast('Gagal menyalin kode', 'error'));
+  };
+
+  // --- THE JOURNEY (SHOWCASE) HANDLERS ---
+  const openCreateSlideModal = () => {
+    setEditingSlide(null);
+    setIsCreatingNewSlide(true);
+    setSlideTitle('');
+    setSlideSubtitle('');
+    setSlideTag('Orientation');
+    setSlideSemester(1);
+    setSlideDate('2025');
+    setSlideDescription('');
+    setSlideMediaUrl('/gallery/slide-orientation.jpg');
+    setSlideMediaType('image');
+    setSlideAccentColor('#3b82f6');
+    setIsSlideModalOpen(true);
+  };
+
+  const openEditSlideModal = (slide: SlideItem) => {
+    setEditingSlide(slide);
+    setIsCreatingNewSlide(false);
+    setSlideTitle(slide.title);
+    setSlideSubtitle(slide.subtitle || '');
+    setSlideTag(slide.tag || 'Milestone');
+    setSlideSemester(slide.semester || 1);
+    setSlideDate(slide.date || '');
+    setSlideDescription(slide.description || '');
+    setSlideMediaUrl(slide.mediaUrl || '');
+    setSlideMediaType(slide.mediaType || 'image');
+    setSlideAccentColor(slide.accentColor || '#3b82f6');
+    setIsSlideModalOpen(true);
+  };
+
+  const handleSaveSlide = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!slideTitle.trim() || !slideDescription.trim() || !slideMediaUrl.trim()) {
+      showToast('Judul, deskripsi, dan URL media wajib diisi!', 'error');
+      return;
+    }
+
+    setIsSavingSlide(true);
+    try {
+      const payload = {
+        apiKey: DEFAULT_PASSKEY,
+        id: editingSlide?.id,
+        title: slideTitle.trim(),
+        subtitle: slideSubtitle.trim(),
+        tag: slideTag.trim(),
+        semester: Number(slideSemester) || 1,
+        date: slideDate.trim(),
+        description: slideDescription.trim(),
+        mediaUrl: slideMediaUrl.trim(),
+        mediaType: slideMediaType,
+        accentColor: slideAccentColor.trim() || '#3b82f6',
+      };
+
+      const res = await fetch('/api/journey', {
+        method: isCreatingNewSlide ? 'POST' : 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': DEFAULT_PASSKEY,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(
+          isCreatingNewSlide ? 'Slide baru berhasil ditambahkan ke The Journey!' : 'Slide The Journey berhasil diperbarui!',
+          'success'
+        );
+        setIsSlideModalOpen(false);
+        setEditingSlide(null);
+        await loadSlides();
+      } else {
+        showToast(data.error || 'Gagal menyimpan slide', 'error');
+      }
+    } catch {
+      showToast('Terjadi kesalahan saat menyimpan slide', 'error');
+    } finally {
+      setIsSavingSlide(false);
+    }
+  };
+
+  const handleDeleteSlide = async (id: string, title: string) => {
+    if (!confirm(`Hapus slide "${title}" dari The Journey?`)) return;
+
+    try {
+      const res = await fetch(`/api/journey?id=${id}&apiKey=${DEFAULT_PASSKEY}`, {
+        method: 'DELETE',
+        headers: { 'x-api-key': DEFAULT_PASSKEY },
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Slide "${title}" berhasil dihapus`, 'success');
+        await loadSlides();
+      } else {
+        showToast(data.error || 'Gagal menghapus slide', 'error');
+      }
+    } catch {
+      showToast('Gagal menghapus slide', 'error');
+    }
+  };
+
+  const handleMoveSlide = async (index: number, direction: 'up' | 'down') => {
+    const targetIdx = direction === 'up' ? index - 1 : index + 1;
+    if (targetIdx < 0 || targetIdx >= adminSlides.length) return;
+
+    const updated = [...adminSlides];
+    const temp = updated[index];
+    updated[index] = updated[targetIdx];
+    updated[targetIdx] = temp;
+
+    setAdminSlides(updated);
+
+    try {
+      await fetch('/api/journey', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': DEFAULT_PASSKEY,
+        },
+        body: JSON.stringify({ apiKey: DEFAULT_PASSKEY, slides: updated }),
+      });
+      showToast('Urutan slide berhasil diperbarui!', 'info');
+    } catch {
+      showToast('Gagal memperbarui urutan slide', 'error');
+    }
+  };
+
+  // --- GOD MODE (WEBSITE CONTENT) HANDLERS ---
+  const handleSaveGodMode = async () => {
+    setIsSavingGodMode(true);
+    try {
+      const res = await fetch('/api/site-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': DEFAULT_PASSKEY,
+        },
+        body: JSON.stringify({
+          apiKey: DEFAULT_PASSKEY,
+          hero: godHero,
+          manifesto: godManifesto,
+          footer: godFooter,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(
+          data.isReadOnlyFs
+            ? 'Konten website tersimpan di sesi server! (Vercel Serverless Mode)'
+            : 'Konten website (God Mode) berhasil diperbarui!',
+          'success'
+        );
+      } else {
+        showToast(data.error || 'Gagal menyimpan konten website', 'error');
+      }
+    } catch {
+      showToast('Terjadi kesalahan saat menyimpan konten', 'error');
+    } finally {
+      setIsSavingGodMode(false);
+    }
+  };
+
   // --- PASSKEY LOCK SCREEN (EASTER EGG GATEWAY) ---
   if (!isAuthenticated) {
     return (
@@ -1319,37 +1603,37 @@ export default function AdminPage() {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs (Unified Structure) */}
         <div className="flex items-center gap-1.5 p-1 bg-bg-elevated border border-border rounded-2xl mb-6 overflow-x-auto no-scrollbar">
           <button
-            onClick={() => setActiveTab('photos')}
-            className={`flex-1 min-w-[110px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'photos'
-                ? 'bg-accent text-bg-primary shadow-sm'
-                : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/50'
-            }`}
-          >
-            <Camera size={15} />
-            <span>Foto Profil & Crop</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab('students')}
-            className={`flex-1 min-w-[110px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'students'
-                ? 'bg-accent text-bg-primary shadow-sm'
+                ? 'bg-accent text-bg-primary shadow-sm font-bold'
                 : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/50'
             }`}
           >
             <Users size={15} />
-            <span>Identitas JSON</span>
+            <span>Data Mahasiswa ({students.length})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('journey')}
+            className={`flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              activeTab === 'journey'
+                ? 'bg-accent text-bg-primary shadow-sm font-bold'
+                : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/50'
+            }`}
+          >
+            <Layers size={15} />
+            <span>The Journey ({adminSlides.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('projects')}
             className={`flex-1 min-w-[125px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'projects'
-                ? 'bg-accent text-bg-primary shadow-sm'
+                ? 'bg-accent text-bg-primary shadow-sm font-bold'
                 : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/50'
             }`}
           >
@@ -1361,7 +1645,7 @@ export default function AdminPage() {
             onClick={() => setActiveTab('music')}
             className={`flex-1 min-w-[125px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'music'
-                ? 'bg-accent text-bg-primary shadow-sm'
+                ? 'bg-accent text-bg-primary shadow-sm font-bold'
                 : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/50'
             }`}
           >
@@ -1373,7 +1657,7 @@ export default function AdminPage() {
             onClick={() => setActiveTab('stories')}
             className={`flex-1 min-w-[120px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'stories'
-                ? 'bg-accent text-bg-primary shadow-sm'
+                ? 'bg-accent text-bg-primary shadow-sm font-bold'
                 : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/50'
             }`}
           >
@@ -1382,22 +1666,22 @@ export default function AdminPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab('json')}
-            className={`flex-1 min-w-[100px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
-              activeTab === 'json'
-                ? 'bg-accent text-bg-primary shadow-sm'
+            onClick={() => setActiveTab('godmode')}
+            className={`flex-1 min-w-[125px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              activeTab === 'godmode'
+                ? 'bg-accent text-bg-primary shadow-sm font-bold'
                 : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/50'
             }`}
           >
-            <FileCode size={15} />
-            <span>Raw Code</span>
+            <Globe size={15} />
+            <span>⚡ God Mode</span>
           </button>
 
           <button
             onClick={() => setActiveTab('roadmap')}
             className={`flex-1 min-w-[110px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'roadmap'
-                ? 'bg-accent text-bg-primary shadow-sm'
+                ? 'bg-accent text-bg-primary shadow-sm font-bold'
                 : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/50'
             }`}
           >
@@ -1406,297 +1690,555 @@ export default function AdminPage() {
           </button>
         </div>
 
-        {/* TAB 1: KELOLA FOTO MAHASISWA & DRAG N DROP DENGAN CROP */}
-        {activeTab === 'photos' && (
-          <div className="space-y-4">
-            {/* Interactive Batch Drag & Drop Zone */}
-            <div
-              onDragOver={(e) => {
-                e.preventDefault();
-                setIsBatchDragging(true);
-              }}
-              onDragLeave={(e) => {
-                e.preventDefault();
-                setIsBatchDragging(false);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                setIsBatchDragging(false);
-                if (e.dataTransfer.files?.length) {
-                  handleBatchUpload(e.dataTransfer.files);
-                }
-              }}
-              onClick={() => batchInputRef.current?.click()}
-              className={`p-4 sm:p-5 rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-between gap-4 select-none ${
-                isBatchDragging
-                  ? 'border-accent bg-accent/15 scale-[1.01] shadow-[0_0_25px_rgba(0,240,255,0.25)]'
-                  : 'border-accent/30 bg-accent/5 hover:border-accent/60 hover:bg-accent/10'
-              }`}
-            >
-              <input
-                ref={batchInputRef}
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={(e) => {
-                  if (e.target.files?.length) {
-                    handleBatchUpload(e.target.files);
-                  }
-                }}
-                className="hidden"
-              />
-
-              <div className="flex items-center gap-3.5 text-center sm:text-left">
-                <div className="w-12 h-12 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shrink-0 mx-auto sm:mx-0">
-                  <Upload size={22} className={isBatchDragging ? 'animate-bounce' : ''} />
-                </div>
-                <div>
-                  <h4 className="text-sm font-heading font-bold text-text-primary flex items-center justify-center sm:justify-start gap-1.5">
-                    <span>Batch Drag & Drop Foto</span>
-                    <span className="px-2 py-0.5 rounded-full bg-accent/20 text-accent text-[10px] font-mono">
-                      AUTO-ID
-                    </span>
-                  </h4>
-                  <p className="text-xs text-text-muted mt-0.5">
-                    Tarik file foto (misal: <code className="text-accent font-mono">1.jpg</code>, <code className="text-accent font-mono">2.png</code>) langsung ke sini untuk update otomatis banyak mahasiswa sekaligus!
-                  </p>
-                </div>
-              </div>
-
-              <span className="px-3.5 py-2 rounded-xl bg-accent text-bg-primary text-xs font-heading font-bold whitespace-nowrap shadow-sm">
-                Upload Banyak File
-              </span>
-            </div>
-
-            {/* Search and filter bar */}
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-              <div className="relative flex-1 max-w-md">
-                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari mahasiswa untuk ganti / crop foto..."
-                  className="w-full pl-9 pr-8 py-2 bg-bg-elevated border border-border rounded-xl text-xs sm:text-sm text-text-primary placeholder:text-text-dim focus:outline-none focus:border-accent"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-dim hover:text-text-primary"
-                  >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
-
-              {/* Roles Chips */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-                {roles.map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => setRoleFilter(r)}
-                    className={`px-3 py-1 rounded-lg text-xs font-mono tracking-wider uppercase whitespace-nowrap transition-colors cursor-pointer ${
-                      roleFilter === r
-                        ? 'bg-accent/15 border border-accent/40 text-accent font-semibold'
-                        : 'bg-bg-surface border border-border text-text-muted hover:text-text-primary'
-                    }`}
-                  >
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Student Photo Grid with Individual Card Drag & Drop + Crop Trigger */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {filteredStudents.map((s) => {
-                const isTarget = draggingCardId === s.id;
-                const hasCustomPhoto = Boolean(s.photo && s.photo.trim() !== '');
-
-                return (
-                  <div
-                    key={s.id}
-                    onDragOver={(e) => handleCardDragOver(e, s.id)}
-                    onDragLeave={handleCardDragLeave}
-                    onDrop={(e) => handleCardDrop(e, s)}
-                    className={`relative p-4 rounded-2xl border transition-all flex flex-col justify-between overflow-hidden ${
-                      isTarget
-                        ? 'border-accent bg-accent/15 scale-[1.02] shadow-[0_0_20px_rgba(0,240,255,0.3)] ring-2 ring-accent'
-                        : 'border-border bg-bg-elevated/50 hover:border-border-accent/60'
-                    }`}
-                  >
-                    {/* Drag overlay feedback */}
-                    {isTarget && (
-                      <div className="absolute inset-0 z-20 bg-bg-primary/95 backdrop-blur-xs flex flex-col items-center justify-center p-3 text-center pointer-events-none animate-fade-in">
-                        <CropIcon size={26} className="text-accent animate-bounce mb-1.5" />
-                        <p className="text-xs font-heading font-bold text-accent">
-                          Drop foto untuk sesuaikan crop {s.name}!
-                        </p>
-                        <p className="text-[10px] font-mono text-text-dim mt-0.5">
-                          ID #{s.id}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="flex items-center gap-3 mb-3">
-                      {/* Avatar with strict initials validation */}
-                      <PhotoAvatar student={s} />
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-bg-surface border border-border text-text-dim">
-                            #{s.id}
-                          </span>
-                          {hasCustomPhoto ? (
-                            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400">
-                              FOTO AKTIF
-                            </span>
-                          ) : (
-                            <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-bg-surface border border-border text-text-dim">
-                              INISIAL
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="text-sm font-heading font-semibold text-text-primary truncate">
-                          {s.name}
-                        </h3>
-                        <p className="text-[11px] font-mono text-text-muted">
-                          {s.nim}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Action buttons with Crop Tool */}
-                    <div className="flex items-center gap-2 pt-2 border-t border-border/40">
-                      <button
-                        onClick={() => {
-                          setActivePhotoStudent(s);
-                          setSelectedFile(null);
-                          setPreviewUrl(null);
-                          setCustomPhotoUrl(s.photo || '');
-                        }}
-                        className="flex-1 py-2 px-3 rounded-xl bg-accent/15 border border-accent/30 hover:bg-accent hover:text-bg-primary text-accent text-xs font-heading font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                      >
-                        <CropIcon size={14} />
-                        <span>{hasCustomPhoto ? 'Ganti & Crop' : 'Upload & Crop'}</span>
-                      </button>
-
-                      {hasCustomPhoto && (
-                        <button
-                          onClick={() => handleDeletePhoto(s)}
-                          className="p-2 rounded-xl border border-border hover:border-red-500/40 hover:bg-red-500/10 text-text-dim hover:text-red-400 transition-colors cursor-pointer"
-                          title="Reset Foto ke Inisial"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: IDENTITAS / FORM MAHASISWA */}
+        {/* TAB: DATA MAHASISWA (UNIFIED SECTION: IDENTITAS, FOTO PROFIL, DAN RAW CODE JSON) */}
         {activeTab === 'students' && (
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-              <div className="relative flex-1 max-w-md">
-                <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari nama, NIM, atau alias..."
-                  className="w-full pl-9 pr-8 py-2 bg-bg-elevated border border-border rounded-xl text-xs sm:text-sm text-text-primary placeholder:text-text-dim focus:outline-none focus:border-accent"
-                />
+            {/* Sub-navigation Switcher */}
+            <div className="flex flex-wrap items-center justify-between gap-3 p-2 rounded-2xl bg-bg-elevated border border-border">
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setStudentSubTab('identity')}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-heading font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    studentSubTab === 'identity'
+                      ? 'bg-accent text-bg-primary shadow-sm font-bold'
+                      : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/60'
+                  }`}
+                >
+                  <Users size={14} />
+                  <span>📇 Form &amp; Identitas</span>
+                </button>
+
+                <button
+                  onClick={() => setStudentSubTab('photos')}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-heading font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    studentSubTab === 'photos'
+                      ? 'bg-accent text-bg-primary shadow-sm font-bold'
+                      : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/60'
+                  }`}
+                >
+                  <Camera size={14} />
+                  <span>📸 Foto Profil &amp; Crop ({stats.withPhoto}/{stats.total})</span>
+                </button>
+
+                <button
+                  onClick={() => setStudentSubTab('json')}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-heading font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+                    studentSubTab === 'json'
+                      ? 'bg-accent text-bg-primary shadow-sm font-bold'
+                      : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/60'
+                  }`}
+                >
+                  <FileCode size={14} />
+                  <span>💻 Raw Code JSON</span>
+                </button>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => {
-                    setEditingStudent({
-                      id: students.length + 1,
-                      name: '',
-                      nim: '',
-                      alias: '',
-                      role: 'Anggota',
-                      katakata: '',
-                    });
-                    setIsCreatingNew(true);
-                  }}
-                  className="px-3.5 py-2 rounded-xl bg-accent text-bg-primary text-xs font-heading font-bold flex items-center gap-1.5 cursor-pointer"
+                  onClick={() => handleDownloadJson(rawJson, 'data mahasiswa.json')}
+                  className="px-3 py-1.5 rounded-xl border border-border bg-bg-surface hover:border-accent/40 text-xs font-mono text-text-muted hover:text-accent transition-colors flex items-center gap-1.5 cursor-pointer"
+                  title="Unduh backup data mahasiswa.json"
                 >
-                  <Plus size={14} />
-                  <span>Tambah Baru</span>
+                  <Download size={13} />
+                  <span>Unduh JSON</span>
+                </button>
+                <button
+                  onClick={() => handleCopyJson(rawJson)}
+                  className="px-3 py-1.5 rounded-xl border border-border bg-bg-surface hover:border-accent/40 text-xs font-mono text-text-muted hover:text-accent transition-colors flex items-center gap-1.5 cursor-pointer"
+                  title="Salin JSON ke clipboard"
+                >
+                  <Copy size={13} />
+                  <span>Salin Kode</span>
                 </button>
               </div>
             </div>
 
-            {/* Students Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {filteredStudents.map((s) => (
-                <div
-                  key={s.id}
-                  className="p-4 rounded-2xl border border-border bg-bg-elevated/50 hover:border-border-accent/40 transition-all flex flex-col justify-between gap-3"
-                >
-                  <div>
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs px-2 py-0.5 rounded bg-bg-surface border border-border text-accent font-semibold">
-                          #{s.id}
-                        </span>
-                        <span className="font-mono text-xs text-text-muted">{s.nim}</span>
-                      </div>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-accent-dim/30 border border-border-accent text-accent uppercase">
-                        {s.role || 'Anggota'}
-                      </span>
-                    </div>
-
-                    <h3 className="font-heading font-semibold text-base text-text-primary">
-                      {s.name}
-                    </h3>
-
-                    {s.alias && (
-                      <p className="text-xs text-text-muted mt-0.5">
-                        <span className="text-text-dim font-mono">Alias:</span> {s.alias}
-                      </p>
-                    )}
-
-                    {s.instagram && (
-                      <p className="text-xs text-pink-400 mt-0.5 font-mono">
-                        <span className="text-text-dim">IG:</span> @{s.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/^@/, '').replace(/\/$/, '')}
-                      </p>
-                    )}
-
-                    {s.katakata && (
-                      <p className="text-xs text-text-dim italic mt-2 line-clamp-2 bg-bg-surface/50 p-2 rounded-lg border border-border/40">
-                        &ldquo;{s.katakata}&rdquo;
-                      </p>
-                    )}
+            {/* SUB-TAB 1: IDENTITAS & FORM MAHASISWA */}
+            {studentSubTab === 'identity' && (
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+                  <div className="relative flex-1 max-w-md">
+                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Cari nama, NIM, atau alias..."
+                      className="w-full pl-9 pr-8 py-2 bg-bg-elevated border border-border rounded-xl text-xs sm:text-sm text-text-primary placeholder:text-text-dim focus:outline-none focus:border-accent"
+                    />
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-border/40">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => {
-                        setEditingStudent(s);
-                        setIsCreatingNew(false);
+                        setEditingStudent({
+                          id: students.length + 1,
+                          name: '',
+                          nim: '',
+                          alias: '',
+                          role: 'Anggota',
+                          katakata: '',
+                        });
+                        setIsCreatingNew(true);
                       }}
-                      className="flex-1 py-1.5 px-3 rounded-xl bg-bg-surface border border-border hover:border-accent text-xs font-heading font-semibold text-text-muted hover:text-accent transition-colors cursor-pointer"
+                      className="px-3.5 py-2 rounded-xl bg-accent text-bg-primary text-xs font-heading font-bold flex items-center gap-1.5 cursor-pointer shadow-sm"
                     >
-                      Edit Data
-                    </button>
-                    <button
-                      onClick={() => handleDeleteStudent(s)}
-                      className="p-2 rounded-xl border border-border hover:border-red-500/40 hover:bg-red-500/10 text-text-dim hover:text-red-400 transition-colors cursor-pointer"
-                      title="Hapus Mahasiswa"
-                    >
-                      <Trash2 size={14} />
+                      <Plus size={14} />
+                      <span>Tambah Mahasiswa Baru</span>
                     </button>
                   </div>
                 </div>
-              ))}
+
+                {/* Students Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {filteredStudents.map((s) => (
+                    <div
+                      key={s.id}
+                      className="p-4 rounded-2xl border border-border bg-bg-elevated/50 hover:border-border-accent/40 transition-all flex flex-col justify-between gap-3"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs px-2 py-0.5 rounded bg-bg-surface border border-border text-accent font-semibold">
+                              #{s.id}
+                            </span>
+                            <span className="font-mono text-xs text-text-muted">{s.nim}</span>
+                          </div>
+                          <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-accent-dim/30 border border-border-accent text-accent uppercase">
+                            {s.role || 'Anggota'}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 mb-2">
+                          <PhotoAvatar student={s} size="w-10 h-10" />
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-heading font-semibold text-base text-text-primary truncate">
+                              {s.name}
+                            </h3>
+                            {s.alias && (
+                              <p className="text-xs text-text-muted truncate">
+                                <span className="text-text-dim font-mono">Alias:</span> {s.alias}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {s.instagram && (
+                          <p className="text-xs text-pink-400 mt-0.5 font-mono">
+                            <span className="text-text-dim">IG:</span> @{s.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/^@/, '').replace(/\/$/, '')}
+                          </p>
+                        )}
+
+                        {s.katakata && (
+                          <p className="text-xs text-text-dim italic mt-2 line-clamp-2 bg-bg-surface/50 p-2 rounded-lg border border-border/40">
+                            &ldquo;{s.katakata}&rdquo;
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2 border-t border-border/40">
+                        <button
+                          onClick={() => {
+                            setEditingStudent(s);
+                            setIsCreatingNew(false);
+                          }}
+                          className="flex-1 py-1.5 px-3 rounded-xl bg-bg-surface border border-border hover:border-accent text-xs font-heading font-semibold text-text-muted hover:text-accent transition-colors cursor-pointer"
+                        >
+                          Edit Identitas
+                        </button>
+                        <button
+                          onClick={() => {
+                            setActivePhotoStudent(s);
+                            setSelectedFile(null);
+                            setPreviewUrl(null);
+                            setCustomPhotoUrl(s.photo || '');
+                          }}
+                          className="py-1.5 px-3 rounded-xl bg-accent/10 border border-accent/25 hover:bg-accent hover:text-bg-primary text-xs font-heading font-semibold text-accent transition-colors cursor-pointer flex items-center gap-1"
+                          title="Ganti Foto Profil"
+                        >
+                          <Camera size={13} />
+                          <span>Foto</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteStudent(s)}
+                          className="p-2 rounded-xl border border-border hover:border-red-500/40 hover:bg-red-500/10 text-text-dim hover:text-red-400 transition-colors cursor-pointer"
+                          title="Hapus Mahasiswa"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* SUB-TAB 2: FOTO PROFIL & BATCH DROPZONE */}
+            {studentSubTab === 'photos' && (
+              <div className="space-y-4">
+                {/* Interactive Batch Drag & Drop Zone */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsBatchDragging(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    setIsBatchDragging(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsBatchDragging(false);
+                    if (e.dataTransfer.files?.length) {
+                      handleBatchUpload(e.dataTransfer.files);
+                    }
+                  }}
+                  onClick={() => batchInputRef.current?.click()}
+                  className={`p-4 sm:p-5 rounded-2xl border-2 border-dashed transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-between gap-4 select-none ${
+                    isBatchDragging
+                      ? 'border-accent bg-accent/15 scale-[1.01] shadow-[0_0_25px_rgba(0,240,255,0.25)]'
+                      : 'border-accent/30 bg-accent/5 hover:border-accent/60 hover:bg-accent/10'
+                  }`}
+                >
+                  <input
+                    ref={batchInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={(e) => {
+                      if (e.target.files?.length) {
+                        handleBatchUpload(e.target.files);
+                      }
+                    }}
+                    className="hidden"
+                  />
+
+                  <div className="flex items-center gap-3.5 text-center sm:text-left">
+                    <div className="w-12 h-12 rounded-2xl bg-accent/20 border border-accent/40 flex items-center justify-center text-accent shrink-0 mx-auto sm:mx-0">
+                      <Upload size={22} className={isBatchDragging ? 'animate-bounce' : ''} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-heading font-bold text-text-primary flex items-center justify-center sm:justify-start gap-1.5">
+                        <span>Batch Drag &amp; Drop Foto</span>
+                        <span className="px-2 py-0.5 rounded-full bg-accent/20 text-accent text-[10px] font-mono">
+                          AUTO-ID
+                        </span>
+                      </h4>
+                      <p className="text-xs text-text-muted mt-0.5">
+                        Tarik file foto (misal: <code className="text-accent font-mono">1.jpg</code>, <code className="text-accent font-mono">2.png</code>) langsung ke sini untuk update otomatis banyak mahasiswa sekaligus!
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="px-3.5 py-2 rounded-xl bg-accent text-bg-primary text-xs font-heading font-bold whitespace-nowrap shadow-sm">
+                    Upload Banyak File
+                  </span>
+                </div>
+
+                {/* Search and filter bar */}
+                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+                  <div className="relative flex-1 max-w-md">
+                    <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-dim" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Filter nama mahasiswa untuk ganti foto..."
+                      className="w-full pl-9 pr-8 py-2 bg-bg-elevated border border-border rounded-xl text-xs sm:text-sm text-text-primary placeholder:text-text-dim focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                </div>
+
+                {/* Photos Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {filteredStudents.map((s) => {
+                    const hasCustomPhoto = Boolean(s.photo && s.photo.trim() !== '');
+
+                    return (
+                      <div
+                        key={s.id}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setDraggingCardId(s.id);
+                        }}
+                        onDragLeave={() => setDraggingCardId(null)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setDraggingCardId(null);
+                          if (e.dataTransfer.files?.[0]) {
+                            handleDirectDropFile(s, e.dataTransfer.files[0]);
+                          }
+                        }}
+                        className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between gap-3 ${
+                          draggingCardId === s.id
+                            ? 'border-accent bg-accent/20 scale-[1.02] shadow-[0_0_20px_rgba(0,240,255,0.3)]'
+                            : 'border-border bg-bg-elevated/40 hover:border-border-accent/40'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <PhotoAvatar student={s} size="w-12 h-12" />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-bg-surface border border-border text-accent">
+                                #{s.id}
+                              </span>
+                              <span className="text-[10px] font-mono text-text-dim truncate">
+                                {s.nim}
+                              </span>
+                            </div>
+                            <h4 className="font-heading font-semibold text-xs text-text-primary truncate">
+                              {s.name}
+                            </h4>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 pt-2 border-t border-border/40">
+                          <button
+                            onClick={() => {
+                              setActivePhotoStudent(s);
+                              setSelectedFile(null);
+                              setPreviewUrl(null);
+                              setCustomPhotoUrl(s.photo || '');
+                            }}
+                            className="flex-1 py-2 px-3 rounded-xl bg-accent/15 border border-accent/30 hover:bg-accent hover:text-bg-primary text-accent text-xs font-heading font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <CropIcon size={14} />
+                            <span>{hasCustomPhoto ? 'Ganti & Crop' : 'Upload & Crop'}</span>
+                          </button>
+
+                          {hasCustomPhoto && (
+                            <button
+                              onClick={() => handleDeletePhoto(s)}
+                              className="p-2 rounded-xl border border-border hover:border-red-500/40 hover:bg-red-500/10 text-text-dim hover:text-red-400 transition-colors cursor-pointer"
+                              title="Reset Foto ke Inisial"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* SUB-TAB 3: RAW JSON CODE EDITOR */}
+            {studentSubTab === 'json' && (
+              <div className="space-y-3 flex-1 flex flex-col">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-bg-elevated border border-border">
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-heading font-semibold text-text-primary">
+                      Editor Berkas data mahasiswa.json
+                    </h3>
+                    <p className="text-[11px] text-text-muted">
+                      Edit langsung struktur data mahasiswa. Didukung perlindungan EROFS otomatis untuk Vercel.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleFormatJson}
+                      className="px-3 py-1.5 rounded-xl border border-border bg-bg-surface hover:border-accent/40 text-xs font-mono text-text-muted hover:text-accent transition-colors cursor-pointer"
+                    >
+                      Rapikan (Format)
+                    </button>
+                    <button
+                      onClick={handleSaveRawJson}
+                      disabled={isSaving}
+                      className="px-4 py-1.5 rounded-xl bg-accent hover:bg-accent/90 text-bg-primary text-xs font-heading font-bold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <Save size={14} />
+                      <span>{isSaving ? 'Menyimpan...' : 'Simpan JSON'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="relative flex-1 min-h-[500px] border border-border rounded-2xl overflow-hidden bg-[#0d0d11]">
+                  <textarea
+                    value={rawJson}
+                    onChange={(e) => setRawJson(e.target.value)}
+                    spellCheck={false}
+                    className="w-full h-full min-h-[500px] p-4 bg-transparent font-mono text-xs sm:text-sm text-emerald-400 focus:outline-none resize-none leading-relaxed selection:bg-accent/30 selection:text-white"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB: THE JOURNEY OF CE F (TIMELINE SHOWCASE) */}
+        {activeTab === 'journey' && (
+          <div className="space-y-6">
+            {/* Hero Header */}
+            <div className="p-5 rounded-2xl border border-accent/40 bg-gradient-to-r from-blue-500/10 via-accent/10 to-indigo-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/20 border border-accent/30 text-accent font-mono text-xs mb-2">
+                  <Layers size={13} />
+                  <span>INTERACTIVE GALLERY SHOWCASE</span>
+                </div>
+                <h2 className="text-lg font-heading font-bold text-text-primary">
+                  The Journey of CE F (Showcase Slideshow)
+                </h2>
+                <p className="text-xs sm:text-sm text-text-muted mt-1 max-w-2xl leading-relaxed">
+                  Kelola babak, milestone, narasi, foto/video, tag, dan semester yang tampil di showcase cinematic Apple-style pada halaman utama.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={loadSlides}
+                  disabled={isLoadingSlides}
+                  className="px-3 py-2 rounded-xl bg-bg-surface border border-border hover:border-accent/40 text-text-muted hover:text-accent text-xs font-mono transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RefreshCw size={13} className={isLoadingSlides ? 'animate-spin' : ''} />
+                  <span>Refresh</span>
+                </button>
+
+                <button
+                  onClick={openCreateSlideModal}
+                  className="px-3.5 py-2 rounded-xl bg-accent hover:bg-accent/90 text-bg-primary text-xs font-heading font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+                >
+                  <Plus size={14} />
+                  <span>Tambah Slide Baru</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Slides List */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-heading font-semibold text-text-primary">
+                  Daftar Slide Milestone ({adminSlides.length})
+                </h3>
+                <Link
+                  href="/#timeline"
+                  className="text-xs font-mono text-accent hover:underline flex items-center gap-1"
+                >
+                  <Eye size={13} />
+                  <span>Pratinjau di Homepage</span>
+                </Link>
+              </div>
+
+              {isLoadingSlides ? (
+                <div className="p-12 text-center text-text-muted">
+                  <RefreshCw size={24} className="animate-spin mx-auto mb-2 text-accent" />
+                  <p className="text-xs font-mono">Memuat slide The Journey...</p>
+                </div>
+              ) : adminSlides.length === 0 ? (
+                <div className="p-12 text-center rounded-2xl border border-dashed border-border bg-bg-elevated/30">
+                  <p className="text-sm text-text-muted mb-3">Belum ada slide di The Journey</p>
+                  <button
+                    onClick={openCreateSlideModal}
+                    className="px-3.5 py-2 rounded-xl bg-accent text-bg-primary text-xs font-heading font-bold inline-flex items-center gap-1.5"
+                  >
+                    <Plus size={14} />
+                    <span>Tambah Slide Pertama</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {adminSlides.map((slide, index) => (
+                    <div
+                      key={slide.id}
+                      className="p-4 rounded-2xl border border-border bg-bg-elevated/60 hover:border-accent/40 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                    >
+                      {/* Left: Preview & Order & Info */}
+                      <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
+                        {/* Order Number & Move Buttons */}
+                        <div className="flex flex-col items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => handleMoveSlide(index, 'up')}
+                            disabled={index === 0}
+                            className="p-1 rounded-md bg-bg-surface hover:bg-accent hover:text-bg-primary text-text-dim transition-colors disabled:opacity-20 cursor-pointer"
+                            title="Pindah ke Atas"
+                          >
+                            <ChevronUp size={13} />
+                          </button>
+                          <span className="font-mono text-xs font-bold text-accent">
+                            #{index + 1}
+                          </span>
+                          <button
+                            onClick={() => handleMoveSlide(index, 'down')}
+                            disabled={index === adminSlides.length - 1}
+                            className="p-1 rounded-md bg-bg-surface hover:bg-accent hover:text-bg-primary text-text-dim transition-colors disabled:opacity-20 cursor-pointer"
+                            title="Pindah ke Bawah"
+                          >
+                            <ChevronDown size={13} />
+                          </button>
+                        </div>
+
+                        {/* Thumbnail / Media Preview */}
+                        <div className="relative w-20 h-14 sm:w-24 sm:h-16 rounded-xl overflow-hidden bg-black/50 shrink-0 border border-border">
+                          {slide.mediaType === 'video' ? (
+                            <div className="w-full h-full flex items-center justify-center bg-zinc-900 text-accent">
+                              <Video size={20} />
+                            </div>
+                          ) : (
+                            <img
+                              src={slide.mediaUrl}
+                              alt={slide.title}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                          <span
+                            className="absolute bottom-0 inset-x-0 h-1"
+                            style={{ backgroundColor: slide.accentColor || '#3b82f6' }}
+                          />
+                        </div>
+
+                        {/* Slide Details */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
+                            <span
+                              className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase border"
+                              style={{
+                                borderColor: `${slide.accentColor || '#3b82f6'}40`,
+                                color: slide.accentColor || '#3b82f6',
+                                backgroundColor: `${slide.accentColor || '#3b82f6'}15`,
+                              }}
+                            >
+                              {slide.tag || 'Milestone'}
+                            </span>
+                            <span className="text-[10px] font-mono text-text-dim">
+                              Sem {slide.semester || 1} • {slide.date}
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-heading font-bold text-text-primary truncate">
+                            {slide.title}
+                          </h4>
+                          {slide.subtitle && (
+                            <p className="text-xs text-accent font-medium truncate mt-0.5">
+                              {slide.subtitle}
+                            </p>
+                          )}
+                          <p className="text-xs text-text-muted line-clamp-1 mt-0.5">
+                            {slide.description}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right: Actions */}
+                      <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                        <button
+                          onClick={() => openEditSlideModal(slide)}
+                          className="px-3 py-1.5 rounded-xl bg-bg-surface border border-border hover:border-accent text-xs font-mono text-text-muted hover:text-text-primary transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Pencil size={12} />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSlide(slide.id, slide.title)}
+                          className="p-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                          title="Hapus Slide"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -2352,44 +2894,267 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* TAB 3: RAW JSON CODE EDITOR */}
-        {activeTab === 'json' && (
-          <div className="space-y-3 flex-1 flex flex-col">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        {/* TAB: GOD MODE (PUSAT KENDALI KONTEN WEBSITE) */}
+        {activeTab === 'godmode' && (
+          <div className="space-y-6">
+            {/* Hero Header */}
+            <div className="p-5 rounded-2xl border border-accent/40 bg-gradient-to-r from-accent/10 via-purple-500/10 to-pink-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h3 className="text-sm font-heading font-semibold text-text-primary">
-                  Editor Berkas data mahasiswa.json
-                </h3>
-                <p className="text-xs text-text-muted">
-                  Edit langsung baris kode JSON. Perubahan akan langsung menulis file sistem.
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/20 border border-accent/30 text-accent font-mono text-xs mb-2">
+                  <Globe size={13} />
+                  <span>⚡ GOD MODE CONTROLLER</span>
+                </div>
+                <h2 className="text-lg font-heading font-bold text-text-primary">
+                  Pusat Kendali Teks &amp; Media Website Kelas F
+                </h2>
+                <p className="text-xs sm:text-sm text-text-muted mt-1 max-w-2xl leading-relaxed">
+                  Ubah headline, subjudul, badge, deskripsi manifesto, angka statistik, foto mockup, dan tautan media sosial secara langsung. Setiap perubahan langsung aktif di homepage tanpa perlu menyentuh baris kode.
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={handleFormatJson}
-                  className="px-3 py-1.5 rounded-xl border border-border bg-bg-surface hover:border-accent/40 text-xs font-mono text-text-muted hover:text-accent transition-colors cursor-pointer"
+                  onClick={loadGodContent}
+                  disabled={isLoadingGodMode}
+                  className="px-3 py-2 rounded-xl bg-bg-surface border border-border hover:border-accent/40 text-text-muted hover:text-accent text-xs font-mono transition-all flex items-center gap-1.5 cursor-pointer"
                 >
-                  Rapikan (Format)
+                  <RefreshCw size={13} className={isLoadingGodMode ? 'animate-spin' : ''} />
+                  <span>Refresh</span>
                 </button>
+
                 <button
-                  onClick={handleSaveRawJson}
-                  disabled={isSaving}
-                  className="px-4 py-1.5 rounded-xl bg-accent hover:bg-accent/90 text-bg-primary text-xs font-heading font-bold flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  onClick={() =>
+                    handleDownloadJson(
+                      JSON.stringify({ hero: godHero, manifesto: godManifesto, footer: godFooter }, null, 2),
+                      'site-content.json'
+                    )
+                  }
+                  className="px-3 py-2 rounded-xl bg-bg-surface border border-border hover:border-accent/40 text-text-muted hover:text-accent text-xs font-mono transition-all flex items-center gap-1.5 cursor-pointer"
+                  title="Unduh backup data website"
+                >
+                  <Download size={13} />
+                  <span>Backup JSON</span>
+                </button>
+
+                <button
+                  onClick={handleSaveGodMode}
+                  disabled={isSavingGodMode}
+                  className="px-4 py-2 rounded-xl bg-accent hover:bg-accent/90 text-bg-primary text-xs font-heading font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-[0_0_20px_rgba(0,240,255,0.25)] disabled:opacity-50"
                 >
                   <Save size={14} />
-                  <span>{isSaving ? 'Menyimpan...' : 'Simpan JSON'}</span>
+                  <span>{isSavingGodMode ? 'Menyimpan...' : 'Simpan Semua Konten'}</span>
                 </button>
               </div>
             </div>
 
-            <div className="relative flex-1 min-h-[500px] border border-border rounded-2xl overflow-hidden bg-[#0d0d11]">
-              <textarea
-                value={rawJson}
-                onChange={(e) => setRawJson(e.target.value)}
-                spellCheck={false}
-                className="w-full h-full min-h-[500px] p-4 bg-transparent font-mono text-xs sm:text-sm text-emerald-400 focus:outline-none resize-none leading-relaxed selection:bg-accent/30 selection:text-white"
-              />
+            {/* Cloud Sync & Persistence Alert */}
+            <div className="p-4 rounded-2xl border border-border bg-bg-elevated/40 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-heading font-bold text-accent">
+                <Sparkles size={14} />
+                <span>Tips Penyimpanan Online &amp; Vercel Serverless</span>
+              </div>
+              <p className="text-xs text-text-muted leading-relaxed">
+                Di lingkungan Vercel Serverless, perubahan disimpan ke memori dan cache <code className="text-accent font-mono">/tmp</code> secara aman (bebas error EROFS). Jika ingin perubahan permanen ke GitHub repo atau Hugging Face Dataset, kamu bisa menambahkan variabel lingkungan <code className="text-text-primary font-mono">HF_TOKEN</code> &amp; <code className="text-text-primary font-mono">HF_DATASET_REPO</code> di Vercel, atau cukup klik tombol <strong>Backup JSON</strong> untuk commit langsung ke repo Git kamu.
+              </p>
+            </div>
+
+            {/* Form Sections */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* SECTION 1: HERO */}
+              <div className="p-5 rounded-2xl border border-border bg-bg-elevated/50 space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-border">
+                  <span className="w-2.5 h-2.5 rounded-full bg-accent animate-pulse" />
+                  <h3 className="font-heading font-bold text-sm text-text-primary uppercase tracking-wide">
+                    1. Halaman Depan (Hero Section)
+                  </h3>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Headline Baris 1
+                    </label>
+                    <input
+                      type="text"
+                      value={godHero.headlinePart1}
+                      onChange={(e) => setGodHero({ ...godHero, headlinePart1: e.target.value })}
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                      placeholder="KELAS YANG ISINYA"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Headline Baris 2 (Warna Aksen)
+                    </label>
+                    <input
+                      type="text"
+                      value={godHero.headlinePart2}
+                      onChange={(e) => setGodHero({ ...godHero, headlinePart2: e.target.value })}
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-accent font-bold focus:outline-none focus:border-accent"
+                      placeholder="LITTLE LITTLE GAGAP."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Subjudul / Deskripsi Baris Bawah
+                    </label>
+                    <input
+                      type="text"
+                      value={godHero.subtitle}
+                      onChange={(e) => setGodHero({ ...godHero, subtitle: e.target.value })}
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                      placeholder="Computer Engineering — Class F"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                        Badge Kiri
+                      </label>
+                      <input
+                        type="text"
+                        value={godHero.badgeCode}
+                        onChange={(e) => setGodHero({ ...godHero, badgeCode: e.target.value })}
+                        className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                        placeholder="CE — F"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                        Badge Kanan
+                      </label>
+                      <input
+                        type="text"
+                        value={godHero.badgeLabel}
+                        onChange={(e) => setGodHero({ ...godHero, badgeLabel: e.target.value })}
+                        className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                        placeholder="TK-F POLMED"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      URL Foto Mockup Background
+                    </label>
+                    <input
+                      type="text"
+                      value={godHero.mockupImage}
+                      onChange={(e) => setGodHero({ ...godHero, mockupImage: e.target.value })}
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent font-mono"
+                      placeholder="/hero-mockup.jpg"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 2: MANIFESTO & STATISTIK */}
+              <div className="p-5 rounded-2xl border border-border bg-bg-elevated/50 space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-border">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <h3 className="font-heading font-bold text-sm text-text-primary uppercase tracking-wide">
+                    2. Manifesto &amp; Statistik Kelas
+                  </h3>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Tagline / Slogan Kelas
+                    </label>
+                    <input
+                      type="text"
+                      value={godManifesto.tagline}
+                      onChange={(e) => setGodManifesto({ ...godManifesto, tagline: e.target.value })}
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                      placeholder="Circuits, Code, and Chaos."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Paragraf Narasi Manifesto Kelas
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={godManifesto.description}
+                      onChange={(e) => setGodManifesto({ ...godManifesto, description: e.target.value })}
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent resize-none leading-relaxed"
+                      placeholder="Deskripsi cerita dan visi perjalanan kelas F..."
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                        Jumlah Proyek Aktif
+                      </label>
+                      <input
+                        type="number"
+                        value={godManifesto.statProjects}
+                        onChange={(e) =>
+                          setGodManifesto({ ...godManifesto, statProjects: Number(e.target.value) || 0 })
+                        }
+                        className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                        Jam Praktikum (Hours)
+                      </label>
+                      <input
+                        type="number"
+                        value={godManifesto.statHours}
+                        onChange={(e) =>
+                          setGodManifesto({ ...godManifesto, statHours: Number(e.target.value) || 0 })
+                        }
+                        className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: FOOTER & SOSIAL */}
+              <div className="p-5 rounded-2xl border border-border bg-bg-elevated/50 space-y-4 lg:col-span-2">
+                <div className="flex items-center gap-2 pb-3 border-b border-border">
+                  <span className="w-2.5 h-2.5 rounded-full bg-purple-400 animate-pulse" />
+                  <h3 className="font-heading font-bold text-sm text-text-primary uppercase tracking-wide">
+                    3. Footer &amp; Tautan Sosial
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Catatan Hak Cipta / Footer Copyright
+                    </label>
+                    <input
+                      type="text"
+                      value={godFooter.copyright}
+                      onChange={(e) => setGodFooter({ ...godFooter, copyright: e.target.value })}
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                      placeholder="Class F — Computer Engineering POLMED 2025"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Link Akun Instagram Kelas
+                    </label>
+                    <input
+                      type="text"
+                      value={godFooter.instagramUrl}
+                      onChange={(e) => setGodFooter({ ...godFooter, instagramUrl: e.target.value })}
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                      placeholder="https://instagram.com/comeinone.f"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -3642,6 +4407,217 @@ export default function AdminPage() {
                         ? 'Menyimpan...'
                         : isCreatingNewSong
                         ? 'Tambah Lagu'
+                        : 'Simpan Perubahan'}
+                    </span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* --- MODAL EDIT / TAMBAH SLIDE THE JOURNEY --- */}
+      <AnimatePresence>
+        {isSlideModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-lg bg-bg-elevated border border-border-accent/40 rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar"
+            >
+              <div className="flex items-center justify-between pb-4 border-b border-border mb-5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center text-accent">
+                    <Layers size={16} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-heading font-bold">
+                      {isCreatingNewSlide ? 'Tambah Milestone / Slide Baru' : 'Edit Slide The Journey'}
+                    </h3>
+                    <p className="text-[11px] font-mono text-text-muted">
+                      Dokumentasi sejarah & momen perjalanan kelas F
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSlideModalOpen(false)}
+                  className="p-1.5 rounded-lg hover:bg-bg-surface text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveSlide} className="space-y-4">
+                {/* Title & Subtitle */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Judul Slide *
+                    </label>
+                    <input
+                      type="text"
+                      value={slideTitle}
+                      onChange={(e) => setSlideTitle(e.target.value)}
+                      placeholder="Contoh: The Beginning: Orientasi"
+                      required
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Subjudul / Tagline Singkat
+                    </label>
+                    <input
+                      type="text"
+                      value={slideSubtitle}
+                      onChange={(e) => setSlideSubtitle(e.target.value)}
+                      placeholder="Contoh: Titik temu 30 kepala di Politeknik Negeri Medan"
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                </div>
+
+                {/* Metadata: Tag, Semester, Date */}
+                <div className="grid grid-cols-3 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Tag / Kategori
+                    </label>
+                    <input
+                      type="text"
+                      value={slideTag}
+                      onChange={(e) => setSlideTag(e.target.value)}
+                      placeholder="Orientation"
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Semester
+                    </label>
+                    <select
+                      value={slideSemester}
+                      onChange={(e) => setSlideSemester(Number(e.target.value) || 1)}
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                    >
+                      {[1, 2, 3, 4, 5, 6].map((sem) => (
+                        <option key={sem} value={sem}>
+                          Semester {sem}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      Tanggal / Waktu
+                    </label>
+                    <input
+                      type="text"
+                      value={slideDate}
+                      onChange={(e) => setSlideDate(e.target.value)}
+                      placeholder="Sep 2024"
+                      className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                    />
+                  </div>
+                </div>
+
+                {/* Media Type & URL */}
+                <div className="space-y-3 p-3 rounded-2xl bg-bg-surface/50 border border-border">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                        Tipe Media
+                      </label>
+                      <select
+                        value={slideMediaType}
+                        onChange={(e) => setSlideMediaType(e.target.value as 'image' | 'video')}
+                        className="w-full px-3 py-2 bg-bg-elevated border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent"
+                      >
+                        <option value="image">Gambar / Foto (Image)</option>
+                        <option value="video">Video MP4 / WebM</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                        Aksen Warna
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={slideAccentColor}
+                          onChange={(e) => setSlideAccentColor(e.target.value)}
+                          className="w-8 h-8 rounded-lg border border-border cursor-pointer bg-transparent"
+                        />
+                        <input
+                          type="text"
+                          value={slideAccentColor}
+                          onChange={(e) => setSlideAccentColor(e.target.value)}
+                          className="flex-1 px-3 py-2 bg-bg-elevated border border-border rounded-xl text-xs font-mono text-text-primary focus:outline-none focus:border-accent"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                      URL Media (Gambar / Video) *
+                    </label>
+                    <input
+                      type="text"
+                      value={slideMediaUrl}
+                      onChange={(e) => setSlideMediaUrl(e.target.value)}
+                      placeholder="/gallery/slide-orientation.jpg atau https://..."
+                      required
+                      className="w-full px-3 py-2 bg-bg-elevated border border-border rounded-xl text-xs font-mono text-text-primary focus:outline-none focus:border-accent"
+                    />
+                    <p className="text-[10px] font-mono text-text-dim mt-1">
+                      Gunakan path lokal di /gallery/... atau link gambar online langsung (Unsplash, Cloudinary, dll).
+                    </p>
+                  </div>
+                </div>
+
+                {/* Deskripsi / Kisah Slide */}
+                <div>
+                  <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                    Deskripsi / Cerita Milestone *
+                  </label>
+                  <textarea
+                    value={slideDescription}
+                    onChange={(e) => setSlideDescription(e.target.value)}
+                    rows={4}
+                    placeholder="Ceritakan momen ini secara sinematik..."
+                    required
+                    className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent resize-none leading-relaxed"
+                  />
+                </div>
+
+                {/* Modal Actions */}
+                <div className="flex items-center gap-2 pt-3 border-t border-border/60">
+                  <button
+                    type="button"
+                    onClick={() => setIsSlideModalOpen(false)}
+                    className="flex-1 py-2.5 px-4 rounded-xl border border-border text-xs font-heading font-semibold text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingSlide}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-accent hover:bg-accent/90 text-bg-primary text-xs font-heading font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-[0_0_15px_rgba(0,240,255,0.2)]"
+                  >
+                    <Save size={14} />
+                    <span>
+                      {isSavingSlide
+                        ? 'Menyimpan...'
+                        : isCreatingNewSlide
+                        ? 'Tambah Slide'
                         : 'Simpan Perubahan'}
                     </span>
                   </button>
