@@ -4757,7 +4757,9 @@ export default function AdminPage() {
                   // Derive actual duration in seconds from durationText if durationSeconds is missing/0
                   const parseDurText = (txt?: string) => {
                     if (!txt) return 0;
-                    const parts = txt.split(':').map(Number);
+                    // YouTube can return "6:33" or "6.33" — normalize both
+                    const normalized = txt.trim().replace(/\./g, ':');
+                    const parts = normalized.split(':').map(Number);
                     if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
                     if (parts.length === 2) return parts[0] * 60 + parts[1];
                     return 0;

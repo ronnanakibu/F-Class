@@ -14,14 +14,16 @@ interface ITunesTrack {
 export const dynamic = 'force-dynamic';
 
 function parseDurationToSeconds(durationText?: string): number {
-  if (!durationText) return 180;
-  const parts = durationText.split(':').map((p) => parseInt(p, 10));
+  if (!durationText) return 0;
+  // YouTube can return "6:33" or "6.33" — normalize both separators
+  const normalized = durationText.trim().replace(/\./g, ':');
+  const parts = normalized.split(':').map((p) => parseInt(p, 10));
   if (parts.length === 2) {
     return (parts[0] || 0) * 60 + (parts[1] || 0);
   } else if (parts.length === 3) {
     return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0);
   }
-  return 180;
+  return 0;
 }
 
 export async function GET(req: NextRequest) {
