@@ -1,42 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { readStorageFile, writeStorageFile } from '@/lib/serverStorage';
+import { isValidAdminKey } from '@/lib/auth';
 import type { Project } from '@/types';
+import initialProjects from '@/data/projects.json';
 
-const PROJECTS_FILE = path.join(process.cwd(), 'src', 'data', 'projects.json');
-const API_SECRET = process.env.STORY_BOT_SECRET || 'cef2024';
+const RELATIVE_PATH = 'projects.json';
+const DEFAULT_PROJECTS_JSON = JSON.stringify(initialProjects, null, 2);
+
+export const dynamic = 'force-dynamic';
 
 async function getProjects(): Promise<Project[]> {
   try {
-    const data = await fs.readFile(PROJECTS_FILE, 'utf-8');
-    return JSON.parse(data);
+    const raw = await readStorageFile(RELATIVE_PATH, DEFAULT_PROJECTS_JSON);
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = initialProjects;
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      return initialProjects as Project[];
+    }
+    return data;
   } catch {
-    return [];
+    return initialProjects as Project[];
   }
 }
 
-async function saveProjects(projects: Project[]): Promise<void> {
-  await fs.writeFile(PROJECTS_FILE, JSON.stringify(projects, null, 2), 'utf-8');
+async function saveProjects(projects: Project[]) {
+  return writeStorageFile(RELATIVE_PATH, JSON.stringify(projects, null, 2));
 }
 
 // GET /api/projects - Return all projects
 export async function GET() {
   const projects = await getProjects();
-  return NextResponse.json({ success: true, projects });
+  return NextResponse.json(
+    { success: true, projects },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      },
+    }
+  );
 }
 
 // POST /api/projects - Add new project
 export async function POST(req: NextRequest) {
   try {
+    const body = await req.json();
     const apiKey =
       req.headers.get('x-api-key') ||
-      req.headers.get('authorization')?.replace('Bearer ', '');
+      req.headers.get('authorization')?.replace('Bearer ', '') ||
+      body.apiKey;
 
-    const body = await req.json();
-
-    if ((apiKey || body.apiKey) !== API_SECRET) {
+    if (!isValidAdminKey(apiKey)) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized.' },
+        { success: false, error: 'Unauthorized. Passkey tidak valid.' },
         { status: 401 }
       );
     }
@@ -86,14 +105,14 @@ export async function POST(req: NextRequest) {
     };
 
     const projects = await getProjects();
-    // Add to top if featured, else append
     const updated = newProject.featured ? [newProject, ...projects] : [...projects, newProject];
-    await saveProjects(updated);
+    const writeResult = await saveProjects(updated);
 
     return NextResponse.json({
       success: true,
       message: 'Proyek berhasil ditambahkan!',
       project: newProject,
+      syncedCloud: writeResult.syncedCloud,
     });
   } catch (error) {
     console.error('Error adding project:', error);
@@ -107,15 +126,15 @@ export async function POST(req: NextRequest) {
 // PUT /api/projects - Update existing project
 export async function PUT(req: NextRequest) {
   try {
+    const body = await req.json();
     const apiKey =
       req.headers.get('x-api-key') ||
-      req.headers.get('authorization')?.replace('Bearer ', '');
+      req.headers.get('authorization')?.replace('Bearer ', '') ||
+      body.apiKey;
 
-    const body = await req.json();
-
-    if ((apiKey || body.apiKey) !== API_SECRET) {
+    if (!isValidAdminKey(apiKey)) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized.' },
+        { success: false, error: 'Unauthorized. Passkey tidak valid.' },
         { status: 401 }
       );
     }
@@ -160,12 +179,13 @@ export async function PUT(req: NextRequest) {
     };
 
     projects[index] = updatedProject;
-    await saveProjects(projects);
+    const writeResult = await saveProjects(projects);
 
     return NextResponse.json({
       success: true,
       message: 'Proyek berhasil diperbarui!',
       project: updatedProject,
+      syncedCloud: writeResult.syncedCloud,
     });
   } catch (error) {
     console.error('Error updating project:', error);
@@ -198,9 +218,9 @@ export async function DELETE(req: NextRequest) {
       req.headers.get('authorization')?.replace('Bearer ', '') ||
       bodyData.apiKey;
 
-    if (apiKey !== API_SECRET) {
+    if (!isValidAdminKey(apiKey)) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized.' },
+        { success: false, error: 'Unauthorized. Passkey tidak valid.' },
         { status: 401 }
       );
     }
@@ -222,11 +242,12 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    await saveProjects(filtered);
+    const writeResult = await saveProjects(filtered);
 
     return NextResponse.json({
       success: true,
       message: 'Proyek berhasil dihapus.',
+      syncedCloud: writeResult.syncedCloud,
     });
   } catch (error) {
     console.error('Error deleting project:', error);

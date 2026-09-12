@@ -27,7 +27,11 @@ export async function readStorageFile(
   relativePath: string,
   defaultContent: string = '[]'
 ): Promise<string> {
-  const normalizedPath = relativePath.replace(/\\/g, '/').replace(/^\/+/, '');
+  const normalizedPath = relativePath
+    .replace(/\\/g, '/')
+    .replace(/^\/+/, '')
+    .replace(/^src\/data\//, '')
+    .replace(/^data\//, '');
   const safeFilename = path.basename(normalizedPath);
   const cacheKey = normalizedPath;
 
@@ -140,7 +144,11 @@ export async function writeStorageFile(
   relativePath: string,
   content: string
 ): Promise<WriteResult> {
-  const normalizedPath = relativePath.replace(/\\/g, '/').replace(/^\/+/, '');
+  const normalizedPath = relativePath
+    .replace(/\\/g, '/')
+    .replace(/^\/+/, '')
+    .replace(/^src\/data\//, '')
+    .replace(/^data\//, '');
   const safeFilename = path.basename(normalizedPath);
   const cacheKey = normalizedPath;
   

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readStorageFile, writeStorageFile } from '@/lib/serverStorage';
+import { isValidAdminKey } from '@/lib/auth';
 import type { SlideItem } from '@/types';
 import initialJourney from '@/data/journey.json';
 
-const RELATIVE_PATH = 'src/data/journey.json';
-const API_SECRET = process.env.STORY_BOT_SECRET || 'cef2024';
+const RELATIVE_PATH = 'journey.json';
 const DEFAULT_JOURNEY_JSON = JSON.stringify(initialJourney, null, 2);
 
 async function getSlides(): Promise<SlideItem[]> {
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    if ((apiKey || body.apiKey) !== API_SECRET) {
+    if (!isValidAdminKey(apiKey || body.apiKey)) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Passkey tidak valid.' },
         { status: 401 }
@@ -123,7 +123,7 @@ export async function PUT(req: NextRequest) {
 
     const body = await req.json();
 
-    if ((apiKey || body.apiKey) !== API_SECRET) {
+    if (!isValidAdminKey(apiKey || body.apiKey)) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Passkey tidak valid.' },
         { status: 401 }
@@ -202,7 +202,7 @@ export async function DELETE(req: NextRequest) {
     const id = searchParams.get('id');
     const paramKey = searchParams.get('apiKey');
 
-    if ((apiKey || paramKey) !== API_SECRET) {
+    if (!isValidAdminKey(apiKey || paramKey)) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized.' },
         { status: 401 }

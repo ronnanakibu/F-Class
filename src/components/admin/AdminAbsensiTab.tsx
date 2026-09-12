@@ -98,6 +98,7 @@ export default function AdminAbsensiTab() {
   const [formEndTime, setFormEndTime] = useState('08:20');
   const [formTopic, setFormTopic] = useState('');
   const [isSubmittingMeeting, setIsSubmittingMeeting] = useState(false);
+  const [confirmMarkAll, setConfirmMarkAll] = useState(false);
 
   // Load Schedules & Meetings on Mount
   useEffect(() => {
@@ -294,7 +295,6 @@ export default function AdminAbsensiTab() {
 
   async function handleMarkAllPresent() {
     if (!selectedMeetingId) return;
-    if (!confirm('Tandai SEMUA 20 mahasiswa sebagai HADIR untuk pertemuan ini?')) return;
 
     try {
       const res = await fetch('/api/absensi/admin', {
@@ -531,13 +531,35 @@ export default function AdminAbsensiTab() {
                     </button>
                   )}
 
-                  <button
-                    onClick={handleMarkAllPresent}
-                    className="px-3.5 py-2 rounded-xl bg-accent text-background font-mono text-xs font-bold hover:bg-accent-hover active:scale-95 transition-all flex items-center gap-1.5 shadow-md shadow-accent/20 cursor-pointer"
-                  >
-                    <CheckCircle2 size={13} />
-                    <span>⚡ Tandai Semua Hadir</span>
-                  </button>
+                  {confirmMarkAll ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => {
+                          handleMarkAllPresent();
+                          setConfirmMarkAll(false);
+                        }}
+                        className="px-3 py-2 rounded-xl bg-red-500 text-white font-mono text-xs font-bold hover:bg-red-600 active:scale-95 transition-all flex items-center gap-1.5 shadow-md shadow-red-500/20 cursor-pointer"
+                      >
+                        <CheckCircle2 size={13} />
+                        <span>Yakin Hadirkan Semua?</span>
+                      </button>
+                      <button
+                        onClick={() => setConfirmMarkAll(false)}
+                        className="p-2 rounded-xl bg-white/10 text-text-muted hover:text-white transition-colors cursor-pointer"
+                        title="Batal"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmMarkAll(true)}
+                      className="px-3.5 py-2 rounded-xl bg-accent text-background font-mono text-xs font-bold hover:bg-accent-hover active:scale-95 transition-all flex items-center gap-1.5 shadow-md shadow-accent/20 cursor-pointer"
+                    >
+                      <CheckCircle2 size={13} />
+                      <span>⚡ Tandai Semua Hadir</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>

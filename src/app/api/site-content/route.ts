@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readStorageFile, writeStorageFile } from '@/lib/serverStorage';
+import { isValidAdminKey } from '@/lib/auth';
 
-const RELATIVE_PATH = 'src/data/site-content.json';
-const API_SECRET = process.env.STORY_BOT_SECRET || 'cef2024';
+const RELATIVE_PATH = 'site-content.json';
 
 const defaultContent = {
   hero: {
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
 
-    if ((apiKey || body.apiKey) !== API_SECRET) {
+    if (!isValidAdminKey(apiKey || body.apiKey)) {
       return NextResponse.json(
         { success: false, error: 'Unauthorized. Passkey tidak valid.' },
         { status: 401 }

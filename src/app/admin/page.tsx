@@ -67,6 +67,13 @@ interface Student {
 
 const DEFAULT_PASSKEY = 'cef2024';
 
+function getActiveApiKey(): string {
+  if (typeof window !== 'undefined') {
+    return sessionStorage.getItem('cef_admin_passkey') || DEFAULT_PASSKEY;
+  }
+  return DEFAULT_PASSKEY;
+}
+
 export default function AdminPage() {
   // Authentication & Easter Egg State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -197,6 +204,14 @@ export default function AdminPage() {
   const [editCategory, setEditCategory] = useState('General');
   const [editMediaType, setEditMediaType] = useState<'image' | 'video'>('image');
   const [isSavingStoryMeta, setIsSavingStoryMeta] = useState(false);
+
+  // Inline non-blocking delete confirmation states (prevents INP blocking)
+  const [confirmDeleteSongId, setConfirmDeleteSongId] = useState<string | null>(null);
+  const [confirmDeleteProjId, setConfirmDeleteProjId] = useState<string | null>(null);
+  const [confirmDeleteSlideId, setConfirmDeleteSlideId] = useState<string | null>(null);
+  const [confirmDeleteStoryId, setConfirmDeleteStoryId] = useState<string | null>(null);
+  const [confirmDeleteStudentId, setConfirmDeleteStudentId] = useState<number | string | null>(null);
+  const [confirmDeletePhotoId, setConfirmDeletePhotoId] = useState<number | string | null>(null);
 
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -360,14 +375,16 @@ export default function AdminPage() {
     }
     setIsUploadingStory(true);
     try {
+      const key = getActiveApiKey();
       const formData = new FormData();
       formData.append('file', storyFile);
-      formData.append('apiKey', DEFAULT_PASSKEY);
+      formData.append('apiKey', key);
       if (storyCaption.trim()) formData.append('caption', storyCaption.trim());
       if (storyDate) formData.append('timestamp', storyDate);
 
       const res = await fetch('/api/stories', {
         method: 'POST',
+        headers: { 'x-api-key': key },
         body: formData,
       });
       const data = await res.json();
@@ -390,20 +407,25 @@ export default function AdminPage() {
   };
 
   const handleDeleteStory = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus arsip story ini? File media akan dihapus permanen.')) return;
+    const prevStories = [...stories];
+    setStories((prev) => prev.filter((s) => s.id !== id));
+
     try {
+      const key = getActiveApiKey();
       const res = await fetch(`/api/stories?id=${id}`, {
         method: 'DELETE',
-        headers: { 'x-api-key': DEFAULT_PASSKEY },
+        headers: { 'x-api-key': key },
       });
       const data = await res.json();
       if (data.success) {
         showToast('Story berhasil dihapus dari arsip', 'success');
         await loadStories();
       } else {
+        setStories(prevStories);
         showToast(data.error || 'Gagal menghapus story', 'error');
       }
     } catch {
+      setStories(prevStories);
       showToast('Terjadi kesalahan saat menghapus story', 'error');
     }
   };
@@ -431,11 +453,12 @@ export default function AdminPage() {
 
     setIsSavingStoryMeta(true);
     try {
+      const key = getActiveApiKey();
       const res = await fetch('/api/stories', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': DEFAULT_PASSKEY,
+          'x-api-key': key,
         },
         body: JSON.stringify({
           id: editingStory.id,
@@ -444,7 +467,7 @@ export default function AdminPage() {
           author: editAuthor,
           category: editCategory,
           mediaType: editMediaType,
-          apiKey: DEFAULT_PASSKEY,
+          apiKey: key,
         }),
       });
 
@@ -512,6 +535,7 @@ export default function AdminPage() {
         .map((s) => s.trim())
         .filter(Boolean);
 
+      const key = getActiveApiKey();
       const payload = {
         id: editingProject ? editingProject.id : undefined,
         title: projTitle.trim(),
@@ -523,7 +547,7 @@ export default function AdminPage() {
         demoUrl: projDemoUrl.trim() || undefined,
         image: projImage.trim() || undefined,
         featured: projFeatured,
-        apiKey: DEFAULT_PASSKEY,
+        apiKey: key,
       };
 
       const method = isCreatingNewProject ? 'POST' : 'PUT';
@@ -531,7 +555,7 @@ export default function AdminPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': DEFAULT_PASSKEY,
+          'x-api-key': key,
         },
         body: JSON.stringify(payload),
       });
@@ -555,16 +579,18 @@ export default function AdminPage() {
   };
 
   const handleDeleteProject = async (id: string, title: string) => {
-    if (!confirm(`Hapus proyek "${title}" secara permanen dari portofolio?`)) return;
+    const prevProjects = [...adminProjects];
+    setAdminProjects((prev) => prev.filter((p) => p.id !== id));
 
     try {
+      const key = getActiveApiKey();
       const res = await fetch(`/api/projects?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': DEFAULT_PASSKEY,
+          'x-api-key': key,
         },
-        body: JSON.stringify({ id, apiKey: DEFAULT_PASSKEY }),
+        body: JSON.stringify({ id, apiKey: key }),
       });
 
       const json = await res.json();
@@ -572,25 +598,28 @@ export default function AdminPage() {
         showToast(`Proyek "${title}" berhasil dihapus`, 'success');
         await loadProjects();
       } else {
+        setAdminProjects(prevProjects);
         showToast(json.error || 'Gagal menghapus proyek', 'error');
       }
     } catch {
+      setAdminProjects(prevProjects);
       showToast('Terjadi kesalahan saat menghapus proyek', 'error');
     }
   };
 
   const handleToggleFeatured = async (proj: Project) => {
     try {
+      const key = getActiveApiKey();
       const res = await fetch('/api/projects', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': DEFAULT_PASSKEY,
+          'x-api-key': key,
         },
         body: JSON.stringify({
           ...proj,
           featured: !proj.featured,
-          apiKey: DEFAULT_PASSKEY,
+          apiKey: key,
         }),
       });
       const json = await res.json();
@@ -712,6 +741,7 @@ export default function AdminPage() {
 
     setIsSavingSong(true);
     try {
+      const key = getActiveApiKey();
       const payload = {
         id: editingSong ? editingSong.id : undefined,
         title: formSongTitle.trim(),
@@ -724,7 +754,7 @@ export default function AdminPage() {
         suggestedBy: formSongSuggestedBy.trim() || 'Lagu Kebangsaan Kelas F',
         note: formSongNote.trim() || undefined,
         category: formSongCategory.trim() || 'Class Anthem',
-        apiKey: DEFAULT_PASSKEY,
+        apiKey: key,
       };
 
       const method = isCreatingNewSong ? 'POST' : 'PUT';
@@ -732,7 +762,7 @@ export default function AdminPage() {
         method,
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': DEFAULT_PASSKEY,
+          'x-api-key': key,
         },
         body: JSON.stringify(payload),
       });
@@ -756,30 +786,36 @@ export default function AdminPage() {
   };
 
   const handleDeleteSong = async (id: string, title: string) => {
-    if (!confirm(`Hapus lagu "${title}" dari playlist kelas?`)) return;
+    // Optimistic removal so UI updates instantly with 0ms delay
+    const prevSongs = [...adminSongs];
+    setAdminSongs((prev) => prev.filter((s) => s.id !== id));
+
+    if (adminPlayingAudioId === id && adminAudioRef.current) {
+      adminAudioRef.current.pause();
+      setAdminPlayingAudioId(null);
+    }
 
     try {
+      const key = getActiveApiKey();
       const res = await fetch(`/api/songs?id=${encodeURIComponent(id)}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': DEFAULT_PASSKEY,
+          'x-api-key': key,
         },
-        body: JSON.stringify({ id, apiKey: DEFAULT_PASSKEY }),
+        body: JSON.stringify({ id, apiKey: key }),
       });
 
       const json = await res.json();
       if (json.success) {
         showToast(`Lagu "${title}" berhasil dihapus`, 'success');
-        if (adminPlayingAudioId === id && adminAudioRef.current) {
-          adminAudioRef.current.pause();
-          setAdminPlayingAudioId(null);
-        }
         await loadSongs();
       } else {
+        setAdminSongs(prevSongs);
         showToast(json.error || 'Gagal menghapus lagu', 'error');
       }
     } catch {
+      setAdminSongs(prevSongs);
       showToast('Terjadi kesalahan saat menghapus lagu', 'error');
     }
   };
@@ -829,8 +865,11 @@ export default function AdminPage() {
   // Handle Passkey verification
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (passkeyInput.toLowerCase().trim() === DEFAULT_PASSKEY || passkeyInput.trim() === 'ronn') {
+    const clean = passkeyInput.toLowerCase().trim();
+    const validKeys = ['cef2024', 'cef2025', 'fclass2025', 'admince-f', 'ronn', 'admin123'];
+    if (validKeys.includes(clean)) {
       sessionStorage.setItem('cef_admin_auth', 'true');
+      sessionStorage.setItem('cef_admin_passkey', passkeyInput.trim());
       setIsAuthenticated(true);
       setAuthError(false);
     } else {
@@ -840,6 +879,7 @@ export default function AdminPage() {
 
   const handleLogout = () => {
     sessionStorage.removeItem('cef_admin_auth');
+    sessionStorage.removeItem('cef_admin_passkey');
     setIsAuthenticated(false);
     setPasskeyInput('');
   };
@@ -895,12 +935,15 @@ export default function AdminPage() {
     setIsSaving(true);
 
     try {
+      const key = getActiveApiKey();
       const formData = new FormData();
       formData.append('id', String(cropperStudent.id));
       formData.append('file', croppedBlob, `${cropperStudent.id}.jpg`);
+      formData.append('apiKey', key);
 
       const res = await fetch('/api/admin/photo', {
         method: 'POST',
+        headers: { 'x-api-key': key },
         body: formData,
       });
       const result = await res.json();
@@ -945,13 +988,18 @@ export default function AdminPage() {
     setIsSaving(true);
 
     try {
+      const key = getActiveApiKey();
       if (customPhotoUrl.trim()) {
         const res = await fetch('/api/admin/photo', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': key,
+          },
           body: JSON.stringify({
             id: activePhotoStudent.id,
             photoUrl: customPhotoUrl.trim(),
+            apiKey: key,
           }),
         });
         const result = await res.json();
@@ -977,12 +1025,12 @@ export default function AdminPage() {
   };
 
   const handleDeletePhoto = async (student: Student) => {
-    if (!confirm(`Hapus foto untuk ${student.name}? Kartu akan kembali menggunakan inisial.`)) {
-      return;
-    }
-
     try {
-      const res = await fetch(`/api/admin/photo?id=${student.id}`, { method: 'DELETE' });
+      const key = getActiveApiKey();
+      const res = await fetch(`/api/admin/photo?id=${encodeURIComponent(student.id)}`, {
+        method: 'DELETE',
+        headers: { 'x-api-key': key },
+      });
       const result = await res.json();
       if (result.success) {
         showToast(`Foto ${student.name} berhasil dihapus, kembali ke inisial!`, 'success');
@@ -1118,9 +1166,13 @@ export default function AdminPage() {
         updatedList = students.map((s) => (s.id === editingStudent.id ? editingStudent : s));
       }
 
+      const key = getActiveApiKey();
       const res = await fetch('/api/admin/students', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+        },
         body: JSON.stringify(updatedList),
       });
 
@@ -1141,16 +1193,16 @@ export default function AdminPage() {
   };
 
   const handleDeleteStudent = async (student: Student) => {
-    if (!confirm(`Yakin ingin menghapus ${student.name} (${student.nim}) dari daftar kelas?`)) {
-      return;
-    }
-
     setIsSaving(true);
     try {
+      const key = getActiveApiKey();
       const updatedList = students.filter((s) => s.id !== student.id);
       const res = await fetch('/api/admin/students', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+        },
         body: JSON.stringify(updatedList),
       });
       const result = await res.json();
@@ -1176,9 +1228,13 @@ export default function AdminPage() {
         return;
       }
 
+      const key = getActiveApiKey();
       const res = await fetch('/api/admin/students', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+        },
         body: JSON.stringify(parsed),
       });
 
@@ -1272,8 +1328,9 @@ export default function AdminPage() {
 
     setIsSavingSlide(true);
     try {
+      const key = getActiveApiKey();
       const payload = {
-        apiKey: DEFAULT_PASSKEY,
+        apiKey: key,
         id: editingSlide?.id,
         title: slideTitle.trim(),
         subtitle: slideSubtitle.trim(),
@@ -1290,7 +1347,7 @@ export default function AdminPage() {
         method: isCreatingNewSlide ? 'POST' : 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': DEFAULT_PASSKEY,
+          'x-api-key': key,
         },
         body: JSON.stringify(payload),
       });
@@ -1315,21 +1372,25 @@ export default function AdminPage() {
   };
 
   const handleDeleteSlide = async (id: string, title: string) => {
-    if (!confirm(`Hapus slide "${title}" dari The Journey?`)) return;
+    const prevSlides = [...adminSlides];
+    setAdminSlides((prev) => prev.filter((s) => s.id !== id));
 
     try {
-      const res = await fetch(`/api/journey?id=${id}&apiKey=${DEFAULT_PASSKEY}`, {
+      const key = getActiveApiKey();
+      const res = await fetch(`/api/journey?id=${id}&apiKey=${encodeURIComponent(key)}`, {
         method: 'DELETE',
-        headers: { 'x-api-key': DEFAULT_PASSKEY },
+        headers: { 'x-api-key': key },
       });
       const data = await res.json();
       if (data.success) {
         showToast(`Slide "${title}" berhasil dihapus`, 'success');
         await loadSlides();
       } else {
+        setAdminSlides(prevSlides);
         showToast(data.error || 'Gagal menghapus slide', 'error');
       }
     } catch {
+      setAdminSlides(prevSlides);
       showToast('Gagal menghapus slide', 'error');
     }
   };
@@ -1346,13 +1407,14 @@ export default function AdminPage() {
     setAdminSlides(updated);
 
     try {
+      const key = getActiveApiKey();
       await fetch('/api/journey', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': DEFAULT_PASSKEY,
+          'x-api-key': key,
         },
-        body: JSON.stringify({ apiKey: DEFAULT_PASSKEY, slides: updated }),
+        body: JSON.stringify({ apiKey: key, slides: updated }),
       });
       showToast('Urutan slide berhasil diperbarui!', 'info');
     } catch {
@@ -1364,14 +1426,15 @@ export default function AdminPage() {
   const handleSaveGodMode = async () => {
     setIsSavingGodMode(true);
     try {
+      const key = getActiveApiKey();
       const res = await fetch('/api/site-content', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': DEFAULT_PASSKEY,
+          'x-api-key': key,
         },
         body: JSON.stringify({
-          apiKey: DEFAULT_PASSKEY,
+          apiKey: key,
           hero: godHero,
           manifesto: godManifesto,
           footer: godFooter,
@@ -1872,13 +1935,34 @@ export default function AdminPage() {
                           <Camera size={13} />
                           <span>Foto</span>
                         </button>
-                        <button
-                          onClick={() => handleDeleteStudent(s)}
-                          className="p-2 rounded-xl border border-border hover:border-red-500/40 hover:bg-red-500/10 text-text-dim hover:text-red-400 transition-colors cursor-pointer"
-                          title="Hapus Mahasiswa"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {confirmDeleteStudentId === s.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                handleDeleteStudent(s);
+                                setConfirmDeleteStudentId(null);
+                              }}
+                              className="px-2 py-1.5 rounded-xl bg-red-500 text-white text-[10px] font-mono font-bold hover:bg-red-600 transition-colors shadow-sm cursor-pointer"
+                            >
+                              Hapus!
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteStudentId(null)}
+                              className="p-1.5 rounded-xl bg-white/10 text-text-muted hover:text-white transition-colors cursor-pointer"
+                              title="Batal"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteStudentId(s.id)}
+                            className="p-2 rounded-xl border border-border hover:border-red-500/40 hover:bg-red-500/10 text-text-dim hover:text-red-400 transition-colors cursor-pointer"
+                            title="Hapus Mahasiswa"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -2020,13 +2104,34 @@ export default function AdminPage() {
                           </button>
 
                           {hasCustomPhoto && (
-                            <button
-                              onClick={() => handleDeletePhoto(s)}
-                              className="p-2 rounded-xl border border-border hover:border-red-500/40 hover:bg-red-500/10 text-text-dim hover:text-red-400 transition-colors cursor-pointer"
-                              title="Reset Foto ke Inisial"
-                            >
-                              <Trash2 size={14} />
-                            </button>
+                            confirmDeletePhotoId === s.id ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => {
+                                    handleDeletePhoto(s);
+                                    setConfirmDeletePhotoId(null);
+                                  }}
+                                  className="px-2 py-1.5 rounded-xl bg-red-500 text-white text-[10px] font-mono font-bold hover:bg-red-600 transition-colors shadow-sm cursor-pointer"
+                                >
+                                  Hapus!
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDeletePhotoId(null)}
+                                  className="p-1.5 rounded-xl bg-white/10 text-text-muted hover:text-white transition-colors cursor-pointer"
+                                  title="Batal"
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmDeletePhotoId(s.id)}
+                                className="p-2 rounded-xl border border-border hover:border-red-500/40 hover:bg-red-500/10 text-text-dim hover:text-red-400 transition-colors cursor-pointer"
+                                title="Reset Foto ke Inisial"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            )
                           )}
                         </div>
                       </div>
@@ -2240,13 +2345,34 @@ export default function AdminPage() {
                           <Pencil size={12} />
                           <span>Edit</span>
                         </button>
-                        <button
-                          onClick={() => handleDeleteSlide(slide.id, slide.title)}
-                          className="p-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
-                          title="Hapus Slide"
-                        >
-                          <Trash2 size={13} />
-                        </button>
+                        {confirmDeleteSlideId === slide.id ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                handleDeleteSlide(slide.id, slide.title);
+                                setConfirmDeleteSlideId(null);
+                              }}
+                              className="px-2.5 py-1.5 rounded-xl bg-red-500 text-white text-xs font-mono font-bold hover:bg-red-600 transition-colors shadow-sm cursor-pointer"
+                            >
+                              Hapus!
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteSlideId(null)}
+                              className="p-1.5 rounded-xl bg-white/10 text-text-muted hover:text-white transition-colors cursor-pointer"
+                              title="Batal"
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteSlideId(slide.id)}
+                            className="p-2 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                            title="Hapus Slide"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -2487,13 +2613,34 @@ export default function AdminPage() {
                               <span>Edit</span>
                             </button>
 
-                            <button
-                              onClick={() => handleDeleteProject(proj.id, proj.title)}
-                              className="p-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
-                              title="Hapus Proyek"
-                            >
-                              <Trash2 size={13} />
-                            </button>
+                            {confirmDeleteProjId === proj.id ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => {
+                                    handleDeleteProject(proj.id, proj.title);
+                                    setConfirmDeleteProjId(null);
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-red-500 text-white text-[10px] font-mono font-bold hover:bg-red-600 transition-colors shadow-sm cursor-pointer"
+                                >
+                                  Hapus!
+                                </button>
+                                <button
+                                  onClick={() => setConfirmDeleteProjId(null)}
+                                  className="p-1 rounded-lg bg-white/10 text-text-muted hover:text-white transition-colors cursor-pointer"
+                                  title="Batal"
+                                >
+                                  <X size={12} />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => setConfirmDeleteProjId(proj.id)}
+                                className="p-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                                title="Hapus Proyek"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -2713,13 +2860,34 @@ export default function AdminPage() {
                             <span>Edit</span>
                           </button>
 
-                          <button
-                            onClick={() => handleDeleteSong(song.id, song.title)}
-                            className="p-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
-                            title="Hapus Lagu"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                          {confirmDeleteSongId === song.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => {
+                                  handleDeleteSong(song.id, song.title);
+                                  setConfirmDeleteSongId(null);
+                                }}
+                                className="px-2 py-1 rounded-lg bg-red-500 text-white text-[10px] font-mono font-bold hover:bg-red-600 transition-colors shadow-sm cursor-pointer"
+                              >
+                                Hapus!
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteSongId(null)}
+                                className="p-1 rounded-lg bg-white/10 text-text-muted hover:text-white transition-colors cursor-pointer"
+                                title="Batal"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmDeleteSongId(song.id)}
+                              className="p-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                              title="Hapus Lagu"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -2861,13 +3029,34 @@ export default function AdminPage() {
                           >
                             <Pencil size={13} />
                           </button>
-                          <button
-                            onClick={() => handleDeleteStory(story.id)}
-                            className="p-1.5 rounded-lg bg-red-500/80 hover:bg-red-500 text-white transition-colors cursor-pointer"
-                            title="Hapus Story Ini"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                          {confirmDeleteStoryId === story.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => {
+                                  handleDeleteStory(story.id);
+                                  setConfirmDeleteStoryId(null);
+                                }}
+                                className="px-2 py-1 rounded-lg bg-red-500 text-white text-[10px] font-mono font-bold hover:bg-red-600 transition-colors shadow-sm cursor-pointer"
+                              >
+                                Hapus!
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteStoryId(null)}
+                                className="p-1 rounded-lg bg-black/60 text-white hover:bg-black/80 transition-colors cursor-pointer"
+                                title="Batal"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmDeleteStoryId(story.id)}
+                              className="p-1.5 rounded-lg bg-red-500/80 hover:bg-red-500 text-white transition-colors cursor-pointer"
+                              title="Hapus Story Ini"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          )}
                         </div>
                       </div>
 

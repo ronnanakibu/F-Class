@@ -1,26 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
+import { readStorageFile, writeStorageFile } from '@/lib/serverStorage';
+import { isValidAdminKey } from '@/lib/auth';
 import type { IGStory } from '@/types';
+import initialStories from '@/data/stories.json';
 
-const STORIES_FILE = path.join(process.cwd(), 'src', 'data', 'stories.json');
+const RELATIVE_PATH = 'stories.json';
 const STORIES_DIR = path.join(process.cwd(), 'public', 'stories');
-const API_SECRET = process.env.STORY_BOT_SECRET || 'cef2024';
+const DEFAULT_STORIES_JSON = JSON.stringify(initialStories, null, 2);
 
-// Helper to safely parse any incoming timestamp (Unix seconds, ms, ISO string) or default to now
+export const dynamic = 'force-dynamic';
+
 function parseTimestamp(rawDate?: string | number | null): string {
   if (!rawDate) return new Date().toISOString();
 
-  // If it's a unix timestamp in seconds (10 digits) or ms (13 digits)
   if (typeof rawDate === 'number' || /^\d+$/.test(String(rawDate).trim())) {
     const num = Number(rawDate);
-    // If < 10000000000, it's seconds, multiply by 1000
     const ms = num < 10000000000 ? num * 1000 : num;
     const d = new Date(ms);
     if (!isNaN(d.getTime())) return d.toISOString();
   }
 
-  // If ISO or standard date string
   const d = new Date(rawDate);
   if (!isNaN(d.getTime())) return d.toISOString();
 
@@ -29,15 +30,24 @@ function parseTimestamp(rawDate?: string | number | null): string {
 
 async function getStories(): Promise<IGStory[]> {
   try {
-    const data = await fs.readFile(STORIES_FILE, 'utf-8');
-    return JSON.parse(data);
+    const raw = await readStorageFile(RELATIVE_PATH, DEFAULT_STORIES_JSON);
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = initialStories;
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      return initialStories as IGStory[];
+    }
+    return data;
   } catch {
-    return [];
+    return initialStories as IGStory[];
   }
 }
 
-async function saveStories(stories: IGStory[]): Promise<void> {
-  await fs.writeFile(STORIES_FILE, JSON.stringify(stories, null, 2), 'utf-8');
+async function saveStories(stories: IGStory[]) {
+  return writeStorageFile(RELATIVE_PATH, JSON.stringify(stories, null, 2));
 }
 
 // GET /api/stories - Return all archived stories sorted newest first
@@ -46,7 +56,14 @@ export async function GET() {
   const sorted = [...stories].sort(
     (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
-  return NextResponse.json({ success: true, stories: sorted });
+  return NextResponse.json(
+    { success: true, stories: sorted },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      },
+    }
+  );
 }
 
 // POST /api/stories - Ingest story from WhatsApp Bot, external script, or Admin
@@ -63,9 +80,9 @@ export async function POST(req: NextRequest) {
       const formData = await req.formData();
       const formApiKey = formData.get('apiKey') as string | null;
 
-      if ((apiKey || formApiKey) !== API_SECRET) {
+      if (!isValidAdminKey(apiKey || formApiKey)) {
         return NextResponse.json(
-          { success: false, error: 'Unauthorized. Invalid API key.' },
+          { success: false, error: 'Unauthorized. Passkey tidak valid.' },
           { status: 401 }
         );
       }
@@ -88,8 +105,6 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      await fs.mkdir(STORIES_DIR, { recursive: true });
-
       const finalTimestamp = parseTimestamp(rawTimestamp);
       const timestampMs = new Date(finalTimestamp).getTime();
       const originalExt = path.extname(file.name).toLowerCase() || '.jpg';
@@ -100,14 +115,44 @@ export async function POST(req: NextRequest) {
         ['.mp4', '.webm', '.mov', '.m4v'].includes(originalExt);
 
       const filename = `story-${timestampMs}${originalExt}`;
-      const filepath = path.join(STORIES_DIR, filename);
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
 
-      const buffer = Buffer.from(await file.arrayBuffer());
-      await fs.writeFile(filepath, buffer);
+      let mediaUrl = `/stories/${filename}`;
+      const hfToken = process.env.HF_TOKEN || process.env.HUGGINGFACE_TOKEN;
+      const hfRepo = process.env.HF_DATASET_REPO;
+
+      if (hfToken && hfRepo) {
+        try {
+          const { uploadFile } = await import('@huggingface/hub');
+          const hfPath = `stories/${filename}`;
+          await uploadFile({
+            repo: { type: 'dataset', name: hfRepo },
+            credentials: { accessToken: hfToken },
+            file: {
+              path: hfPath,
+              content: new Blob([buffer]),
+            },
+          });
+          mediaUrl = `https://huggingface.co/datasets/${hfRepo}/resolve/main/${hfPath}`;
+        } catch (hfErr) {
+          console.warn('[StoriesAPI] HF upload error, falling back to local/data url:', hfErr);
+        }
+      }
+
+      // Try local save in development
+      if (process.env.NODE_ENV === 'development') {
+        try {
+          await fs.mkdir(STORIES_DIR, { recursive: true });
+          await fs.writeFile(path.join(STORIES_DIR, filename), buffer);
+        } catch {
+          // ignore in read-only environment
+        }
+      }
 
       const newStory: IGStory = {
         id: `story-${timestampMs}`,
-        mediaUrl: `/stories/${filename}`,
+        mediaUrl,
         mediaType: isVideo ? 'video' : 'image',
         caption: rawCaption ? rawCaption.trim() : '',
         timestamp: finalTimestamp,
@@ -120,22 +165,23 @@ export async function POST(req: NextRequest) {
 
       const stories = await getStories();
       const updated = [newStory, ...stories];
-      await saveStories(updated);
+      const writeResult = await saveStories(updated);
 
       return NextResponse.json({
         success: true,
         message: 'Story archived successfully with metadata!',
         story: newStory,
+        syncedCloud: writeResult.syncedCloud,
       });
     }
 
-    // 2. JSON payload (e.g. from WhatsApp Bot with base64 or remote mediaUrl)
+    // 2. JSON payload
     if (contentType.includes('application/json')) {
       const body = await req.json();
 
-      if ((apiKey || body.apiKey) !== API_SECRET) {
+      if (!isValidAdminKey(apiKey || body.apiKey)) {
         return NextResponse.json(
-          { success: false, error: 'Unauthorized. Invalid API key.' },
+          { success: false, error: 'Unauthorized. Passkey tidak valid.' },
           { status: 401 }
         );
       }
@@ -144,13 +190,39 @@ export async function POST(req: NextRequest) {
 
       // Support base64 upload
       if (body.base64) {
-        await fs.mkdir(STORIES_DIR, { recursive: true });
         const ext = body.ext || (body.mediaType === 'video' ? '.mp4' : '.jpg');
         const filename = `story-${Date.now()}${ext}`;
-        const filepath = path.join(STORIES_DIR, filename);
         const base64Data = body.base64.replace(/^data:[^;]+;base64,/, '');
-        await fs.writeFile(filepath, Buffer.from(base64Data, 'base64'));
-        mediaUrl = `/stories/${filename}`;
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        const hfToken = process.env.HF_TOKEN || process.env.HUGGINGFACE_TOKEN;
+        const hfRepo = process.env.HF_DATASET_REPO;
+
+        if (hfToken && hfRepo) {
+          try {
+            const { uploadFile } = await import('@huggingface/hub');
+            const hfPath = `stories/${filename}`;
+            await uploadFile({
+              repo: { type: 'dataset', name: hfRepo },
+              credentials: { accessToken: hfToken },
+              file: {
+                path: hfPath,
+                content: new Blob([buffer]),
+              },
+            });
+            mediaUrl = `https://huggingface.co/datasets/${hfRepo}/resolve/main/${hfPath}`;
+          } catch {
+            mediaUrl = body.base64;
+          }
+        } else {
+          try {
+            await fs.mkdir(STORIES_DIR, { recursive: true });
+            await fs.writeFile(path.join(STORIES_DIR, filename), buffer);
+            mediaUrl = `/stories/${filename}`;
+          } catch {
+            mediaUrl = body.base64;
+          }
+        }
       }
 
       if (!mediaUrl) {
@@ -182,12 +254,13 @@ export async function POST(req: NextRequest) {
 
       const stories = await getStories();
       const updated = [newStory, ...stories];
-      await saveStories(updated);
+      const writeResult = await saveStories(updated);
 
       return NextResponse.json({
         success: true,
         message: 'Story archived successfully with metadata!',
         story: newStory,
+        syncedCloud: writeResult.syncedCloud,
       });
     }
 
@@ -214,9 +287,9 @@ export async function PUT(req: NextRequest) {
     const body = await req.json();
     const formApiKey = body.apiKey;
 
-    if ((apiKey || formApiKey) !== API_SECRET) {
+    if (!isValidAdminKey(apiKey || formApiKey)) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized.' },
+        { success: false, error: 'Unauthorized. Passkey tidak valid.' },
         { status: 401 }
       );
     }
@@ -252,12 +325,13 @@ export async function PUT(req: NextRequest) {
     };
 
     stories[index] = updatedStory;
-    await saveStories(stories);
+    const writeResult = await saveStories(stories);
 
     return NextResponse.json({
       success: true,
       message: 'Story metadata updated successfully!',
       story: updatedStory,
+      syncedCloud: writeResult.syncedCloud,
     });
   } catch (error) {
     console.error('Error updating story metadata:', error);
@@ -277,9 +351,9 @@ export async function DELETE(req: NextRequest) {
       req.headers.get('x-api-key') ||
       req.headers.get('authorization')?.replace('Bearer ', '');
 
-    if (apiKey !== API_SECRET) {
+    if (!isValidAdminKey(apiKey)) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized.' },
+        { success: false, error: 'Unauthorized. Passkey tidak valid.' },
         { status: 401 }
       );
     }
@@ -300,23 +374,13 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // Try deleting physical file if in /stories/
-    if (target.mediaUrl.startsWith('/stories/')) {
-      const filename = path.basename(target.mediaUrl);
-      const filepath = path.join(STORIES_DIR, filename);
-      try {
-        await fs.unlink(filepath);
-      } catch {
-        // file may already not exist
-      }
-    }
-
     const filtered = stories.filter((s) => s.id !== id);
-    await saveStories(filtered);
+    const writeResult = await saveStories(filtered);
 
     return NextResponse.json({
       success: true,
       message: 'Story deleted successfully.',
+      syncedCloud: writeResult.syncedCloud,
     });
   } catch (error) {
     console.error('Error deleting story:', error);

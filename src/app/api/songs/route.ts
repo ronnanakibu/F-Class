@@ -1,42 +1,61 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { readStorageFile, writeStorageFile } from '@/lib/serverStorage';
+import { isValidAdminKey } from '@/lib/auth';
 import type { Song } from '@/types';
+import initialSongs from '@/data/songs.json';
 
-const SONGS_FILE = path.join(process.cwd(), 'src', 'data', 'songs.json');
-const API_SECRET = process.env.STORY_BOT_SECRET || 'cef2024';
+const RELATIVE_PATH = 'songs.json';
+const DEFAULT_SONGS_JSON = JSON.stringify(initialSongs, null, 2);
+
+export const dynamic = 'force-dynamic';
 
 async function getSongs(): Promise<Song[]> {
   try {
-    const data = await fs.readFile(SONGS_FILE, 'utf-8');
-    return JSON.parse(data);
+    const raw = await readStorageFile(RELATIVE_PATH, DEFAULT_SONGS_JSON);
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = initialSongs;
+    }
+    if (!Array.isArray(data) || data.length === 0) {
+      return initialSongs as Song[];
+    }
+    return data;
   } catch {
-    return [];
+    return initialSongs as Song[];
   }
 }
 
-async function saveSongs(songs: Song[]): Promise<void> {
-  await fs.writeFile(SONGS_FILE, JSON.stringify(songs, null, 2), 'utf-8');
+async function saveSongs(songs: Song[]) {
+  return writeStorageFile(RELATIVE_PATH, JSON.stringify(songs, null, 2));
 }
 
 // GET /api/songs - Get all playlist songs
 export async function GET() {
   const songs = await getSongs();
-  return NextResponse.json({ success: true, songs });
+  return NextResponse.json(
+    { success: true, songs },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+      },
+    }
+  );
 }
 
 // POST /api/songs - Add new song
 export async function POST(req: NextRequest) {
   try {
+    const body = await req.json();
     const apiKey =
       req.headers.get('x-api-key') ||
-      req.headers.get('authorization')?.replace('Bearer ', '');
+      req.headers.get('authorization')?.replace('Bearer ', '') ||
+      body.apiKey;
 
-    const body = await req.json();
-
-    if ((apiKey || body.apiKey) !== API_SECRET) {
+    if (!isValidAdminKey(apiKey)) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized.' },
+        { success: false, error: 'Unauthorized. Passkey tidak valid.' },
         { status: 401 }
       );
     }
@@ -80,12 +99,13 @@ export async function POST(req: NextRequest) {
 
     const songs = await getSongs();
     const updated = [newSong, ...songs];
-    await saveSongs(updated);
+    const writeResult = await saveSongs(updated);
 
     return NextResponse.json({
       success: true,
       message: 'Lagu berhasil ditambahkan ke playlist kelas!',
       song: newSong,
+      syncedCloud: writeResult.syncedCloud,
     });
   } catch (error) {
     console.error('Error adding song:', error);
@@ -99,15 +119,15 @@ export async function POST(req: NextRequest) {
 // PUT /api/songs - Update existing song
 export async function PUT(req: NextRequest) {
   try {
+    const body = await req.json();
     const apiKey =
       req.headers.get('x-api-key') ||
-      req.headers.get('authorization')?.replace('Bearer ', '');
+      req.headers.get('authorization')?.replace('Bearer ', '') ||
+      body.apiKey;
 
-    const body = await req.json();
-
-    if ((apiKey || body.apiKey) !== API_SECRET) {
+    if (!isValidAdminKey(apiKey)) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized.' },
+        { success: false, error: 'Unauthorized. Passkey tidak valid.' },
         { status: 401 }
       );
     }
@@ -146,12 +166,13 @@ export async function PUT(req: NextRequest) {
     };
 
     songs[index] = updatedSong;
-    await saveSongs(songs);
+    const writeResult = await saveSongs(songs);
 
     return NextResponse.json({
       success: true,
       message: 'Lagu berhasil diperbarui!',
       song: updatedSong,
+      syncedCloud: writeResult.syncedCloud,
     });
   } catch (error) {
     console.error('Error updating song:', error);
@@ -184,9 +205,9 @@ export async function DELETE(req: NextRequest) {
       req.headers.get('authorization')?.replace('Bearer ', '') ||
       bodyData.apiKey;
 
-    if (apiKey !== API_SECRET) {
+    if (!isValidAdminKey(apiKey)) {
       return NextResponse.json(
-        { success: false, error: 'Unauthorized.' },
+        { success: false, error: 'Unauthorized. Passkey tidak valid.' },
         { status: 401 }
       );
     }
@@ -208,11 +229,12 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    await saveSongs(filtered);
+    const writeResult = await saveSongs(filtered);
 
     return NextResponse.json({
       success: true,
       message: 'Lagu berhasil dihapus dari playlist.',
+      syncedCloud: writeResult.syncedCloud,
     });
   } catch (error) {
     console.error('Error deleting song:', error);
