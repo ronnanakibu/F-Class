@@ -4753,7 +4753,22 @@ export default function AdminPage() {
                 )}
 
                 {/* YOUTUBE 30-SECOND SELECTOR (AUDIO TRIMMER) */}
-                {selectedYtTrack && (
+                {selectedYtTrack && (() => {
+                  // Derive actual duration in seconds from durationText if durationSeconds is missing/0
+                  const parseDurText = (txt?: string) => {
+                    if (!txt) return 0;
+                    const parts = txt.split(':').map(Number);
+                    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+                    if (parts.length === 2) return parts[0] * 60 + parts[1];
+                    return 0;
+                  };
+                  const trackDurationSec =
+                    (selectedYtTrack.durationSeconds && selectedYtTrack.durationSeconds > 0
+                      ? selectedYtTrack.durationSeconds
+                      : parseDurText(selectedYtTrack.durationText)) || 420;
+                  const sliderMax = Math.max(30, trackDurationSec - 30);
+
+                  return (
                   <div className="p-3.5 rounded-xl border border-red-500/40 bg-red-500/10 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -4776,7 +4791,7 @@ export default function AdminPage() {
                       <input
                         type="range"
                         min={0}
-                        max={Math.max(10, (selectedYtTrack.durationSeconds || 180) - 30)}
+                        max={sliderMax}
                         step={1}
                         value={ytStartSecond}
                         onChange={(e) => handleYtSliderChange(Number(e.target.value))}
@@ -5044,7 +5059,8 @@ export default function AdminPage() {
                       )}
                     </div>
                   </div>
-                )}
+                  );
+                })()}
               </div>
 
               {/* FORM FIELDS */}
