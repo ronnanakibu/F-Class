@@ -129,16 +129,27 @@ export default function Frequency() {
 
     if (currentSong?.audioUrl) {
       audio.src = currentSong.audioUrl;
-      audio.volume = isMuted ? 0 : volume;
+      audio.currentTime = 0;
+      setCurrentTime(0);
       if (isPlaying) {
-        audio.play().catch(() => setIsPlaying(false));
+        audio.play().catch((err) => {
+          console.warn('Playback interrupted:', err);
+          setIsPlaying(false);
+        });
       }
     } else {
       audio.pause();
       setIsPlaying(false);
+      setCurrentTime(0);
     }
-    setCurrentTime(0);
-  }, [currentSong, isPlaying, isMuted, volume]);
+  }, [currentSong?.id, currentSong?.audioUrl]);
+
+  // Decoupled Volume & Mute control (prevents song reload/pause on volume slider interaction)
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = isMuted ? 0 : volume;
+  }, [volume, isMuted]);
 
   // Scrub / Seek handler
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -301,21 +312,21 @@ export default function Frequency() {
                       </p>
                     )}
 
-                    {/* Animated Sound Wave Equalizer */}
+                    {/* Animated Sound Wave Equalizer (GPU-accelerated CSS) */}
                     <div className="flex items-center justify-center sm:justify-start gap-1 h-6 my-4">
                       {[14, 22, 12, 28, 16, 24, 10, 26, 18, 14, 22, 16].map((h, i) => (
-                        <motion.span
+                        <span
                           key={i}
-                          className="w-1 rounded-full bg-gradient-to-t from-accent/50 to-accent"
-                          animate={{
-                            height: isPlaying ? [4, h, 6, h * 0.8, 4] : 4,
-                          }}
-                          transition={{
-                            duration: 0.8,
-                            repeat: Infinity,
-                            repeatType: 'reverse',
-                            delay: i * 0.06,
-                            ease: 'easeInOut',
+                          className={`w-1 rounded-full bg-gradient-to-t from-accent/50 to-accent ${
+                            isPlaying ? 'animate-eq' : ''
+                          }`}
+                          style={{
+                            height: `${h}px`,
+                            animationDelay: `${(i * 0.08).toFixed(2)}s`,
+                            animationDuration: `${0.65 + (i % 3) * 0.15}s`,
+                            transform: isPlaying ? undefined : 'scaleY(0.2)',
+                            transformOrigin: 'bottom',
+                            transition: 'transform 0.2s ease',
                           }}
                         />
                       ))}

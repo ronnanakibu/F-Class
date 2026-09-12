@@ -75,7 +75,7 @@ export default function AppleSlideshow() {
       if (elapsed >= SLIDE_DURATION) {
         handleNext();
       }
-    }, 50);
+    }, 100);
 
     timerRef.current = interval;
 
@@ -182,7 +182,7 @@ export default function AppleSlideshow() {
 
         {/* Main Cinematic Showcase Card */}
         <div
-          className="relative w-full aspect-[4/3] sm:aspect-[16/10] md:aspect-[21/9] rounded-2xl md:rounded-3xl overflow-hidden border border-border/70 bg-bg-elevated shadow-2xl group select-none"
+          className="relative w-full min-h-[380px] sm:min-h-[440px] md:min-h-0 md:aspect-[21/9] rounded-2xl md:rounded-3xl overflow-hidden border border-border/70 bg-bg-elevated shadow-2xl group select-none"
           onMouseEnter={onMouseEnter}
           onMouseLeave={onMouseLeave}
           onTouchStart={handleTouchStart}
@@ -235,32 +235,26 @@ export default function AppleSlideshow() {
                     style={{ backgroundColor: activeSlide.accentColor || '#3b82f6' }}
                   />
 
-                  {/* Center Emblem */}
-                  <div className="relative z-10 text-center p-6 max-w-md">
-                    <div className="w-16 h-16 rounded-2xl mx-auto mb-4 bg-accent/10 border border-accent/20 flex items-center justify-center backdrop-blur-xl">
-                      <Layers size={28} className="text-accent animate-pulse" />
+                  {/* Center Emblem Watermark (Minimal icon, no duplicate typography) */}
+                  <div className="relative z-10 text-center p-4">
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl mx-auto bg-accent/10 border border-accent/20 flex items-center justify-center backdrop-blur-xl shadow-lg">
+                      <Layers size={26} className="text-accent animate-pulse" />
                     </div>
-                    <span className="font-mono text-xs tracking-widest uppercase text-accent/80 block mb-1">
-                      {activeSlide.tag}
-                    </span>
-                    <h3 className="text-xl md:text-2xl font-bold font-heading text-text-primary">
-                      {activeSlide.title}
-                    </h3>
                   </div>
                 </div>
               )}
 
               {/* Multi-stage Apple-style Vignette Overlay for Crisp Readability */}
-              <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/50 to-transparent opacity-90 md:opacity-80" />
-              <div className="absolute inset-0 bg-gradient-to-r from-bg-primary/90 via-bg-primary/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-bg-primary via-bg-primary/60 to-transparent opacity-95 md:opacity-85 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-r from-bg-primary/80 via-transparent to-transparent pointer-events-none" />
 
               {/* Top Bar Badges on the Card */}
-              <div className="absolute top-4 md:top-6 left-4 md:left-8 right-4 md:right-8 flex items-center justify-between z-20">
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-[11px] font-mono font-semibold tracking-wider uppercase bg-bg-primary/80 backdrop-blur-md border border-border text-accent shadow-sm">
+              <div className="absolute top-3 sm:top-5 md:top-6 left-3.5 sm:left-6 md:left-8 right-3.5 sm:right-6 md:right-8 flex items-center justify-between z-20">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono font-semibold tracking-wider uppercase bg-bg-primary/80 backdrop-blur-md border border-border text-accent shadow-sm">
                     {activeSlide.tag}
                   </span>
-                  <span className="px-3 py-1 rounded-full text-[11px] font-mono tracking-wider uppercase bg-bg-primary/60 backdrop-blur-md border border-border text-text-dim flex items-center gap-1.5">
+                  <span className="px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-mono tracking-wider uppercase bg-bg-primary/60 backdrop-blur-md border border-border text-text-dim flex items-center gap-1.5">
                     <Calendar size={11} />
                     {activeSlide.date}
                   </span>
@@ -296,19 +290,19 @@ export default function AppleSlideshow() {
               </div>
 
               {/* Bottom Card Typography (Title & Narrative) */}
-              <div className="absolute bottom-4 md:bottom-8 left-4 md:left-8 right-4 md:right-8 max-w-2xl z-20">
+              <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 left-3.5 sm:left-6 md:left-8 right-3.5 sm:right-6 md:right-8 max-w-2xl z-20">
                 <motion.div
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15, duration: 0.5 }}
                 >
-                  <h3 className="text-xl sm:text-2xl md:text-4xl font-heading font-extrabold text-white tracking-tight leading-tight mb-2 drop-shadow-md">
+                  <h3 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-heading font-extrabold text-white tracking-tight leading-snug mb-1 sm:mb-2 drop-shadow-md">
                     {activeSlide.title}
                   </h3>
-                  <p className="text-xs sm:text-sm md:text-base font-medium text-accent/90 mb-2">
+                  <p className="text-xs sm:text-sm md:text-base font-semibold text-accent mb-1 sm:mb-2 drop-shadow">
                     {activeSlide.subtitle}
                   </p>
-                  <p className="text-xs sm:text-sm text-text-muted/90 line-clamp-2 md:line-clamp-3 leading-relaxed max-w-xl">
+                  <p className="text-[11px] sm:text-xs md:text-sm text-text-muted/90 line-clamp-2 sm:line-clamp-3 leading-relaxed max-w-xl">
                     {activeSlide.description}
                   </p>
                 </motion.div>
