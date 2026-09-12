@@ -181,6 +181,12 @@ export default function AdminPage() {
   const [isTrimmingAudio, setIsTrimmingAudio] = useState(false);
   const [trimFeedback, setTrimFeedback] = useState<string | null>(null);
 
+  // Audio Preview State (YouTube Trimmer)
+  const [isYtPreviewPlaying, setIsYtPreviewPlaying] = useState(false);
+  const [ytPreviewElapsed, setYtPreviewElapsed] = useState(0); // seconds 0-30
+  const [ytPreviewKey, setYtPreviewKey] = useState(0); // forces iframe reload
+  const ytPreviewTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   // Bot Endpoint State
   const [useBotEndpoint, setUseBotEndpoint] = useState<boolean>(false);
   const [botEndpointUrl, setBotEndpointUrl] = useState<string>('http://ap1.nzb.zelpstore.id:25637');
@@ -443,6 +449,60 @@ export default function AdminPage() {
       setIsTestingBotPing(false);
     }
   };
+
+  // ── YouTube Preview Helpers ───────────────────────────────────────────
+  const stopYtPreview = useCallback(() => {
+    if (ytPreviewTimerRef.current) {
+      clearInterval(ytPreviewTimerRef.current);
+      ytPreviewTimerRef.current = null;
+    }
+    setIsYtPreviewPlaying(false);
+    setYtPreviewElapsed(0);
+  }, []);
+
+  const startYtPreview = useCallback(() => {
+    // Stop any existing preview first
+    if (ytPreviewTimerRef.current) {
+      clearInterval(ytPreviewTimerRef.current);
+    }
+    setYtPreviewElapsed(0);
+    setIsYtPreviewPlaying(true);
+    setYtPreviewKey(k => k + 1); // force iframe reload at new start time
+
+    ytPreviewTimerRef.current = setInterval(() => {
+      setYtPreviewElapsed(prev => {
+        if (prev >= 29) {
+          if (ytPreviewTimerRef.current) clearInterval(ytPreviewTimerRef.current);
+          ytPreviewTimerRef.current = null;
+          setIsYtPreviewPlaying(false);
+          return 0;
+        }
+        return prev + 1;
+      });
+    }, 1000);
+  }, []);
+
+  const handleToggleYtPreview = useCallback(() => {
+    if (isYtPreviewPlaying) {
+      stopYtPreview();
+    } else {
+      startYtPreview();
+    }
+  }, [isYtPreviewPlaying, stopYtPreview, startYtPreview]);
+
+  // Stop preview when track changes or slider moves to new position
+  useEffect(() => {
+    stopYtPreview();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedYtTrack?.videoId]);
+
+  const handleYtSliderChange = useCallback((val: number) => {
+    setYtStartSecond(val);
+    // Restart preview at new position if currently playing
+    if (isYtPreviewPlaying) {
+      startYtPreview();
+    }
+  }, [isYtPreviewPlaying, startYtPreview]);
 
   const handleUploadStory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -4719,7 +4779,7 @@ export default function AdminPage() {
                         max={Math.max(10, (selectedYtTrack.durationSeconds || 180) - 30)}
                         step={1}
                         value={ytStartSecond}
-                        onChange={(e) => setYtStartSecond(Number(e.target.value))}
+                        onChange={(e) => handleYtSliderChange(Number(e.target.value))}
                         className="w-full accent-red-500 cursor-pointer"
                       />
 
@@ -4757,6 +4817,98 @@ export default function AdminPage() {
                           {preset.label}
                         </button>
                       ))}
+                    </div>
+
+                    {/* ── AUDIO PREVIEW PLAYER (Instagram-style) ── */}
+                    <div className="pt-2 border-t border-red-500/20">
+                      <div className="flex items-center gap-3">
+                        {/* Play/Stop button */}
+                        <button
+                          type="button"
+                          onClick={handleToggleYtPreview}
+                          className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-md cursor-pointer ${
+                            isYtPreviewPlaying
+                              ? 'bg-red-500 hover:bg-red-400 text-white'
+                              : 'bg-white/10 hover:bg-white/20 text-white/80 border border-white/20'
+                          }`}
+                          title={isYtPreviewPlaying ? 'Stop Preview' : `Preview dari ${Math.floor(ytStartSecond/60)}:${(ytStartSecond%60).toString().padStart(2,'0')}`}
+                        >
+                          {isYtPreviewPlaying ? (
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                              <rect x="1" y="1" width="4" height="10" rx="1"/>
+                              <rect x="7" y="1" width="4" height="10" rx="1"/>
+                            </svg>
+                          ) : (
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                              <path d="M2 1.5l9 4.5-9 4.5z"/>
+                            </svg>
+                          )}
+                        </button>
+
+                        {/* Waveform bars + progress */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          {/* Animated waveform bars */}
+                          <div className="flex items-end gap-[3px] h-7 overflow-hidden">
+                            {Array.from({ length: 30 }).map((_, i) => {
+                              const filled = isYtPreviewPlaying && i < ytPreviewElapsed;
+                              const heights = [60,40,80,55,90,45,70,50,85,40,65,75,50,90,60,45,80,55,70,85,50,65,40,75,60,90,45,80,55,65];
+                              return (
+                                <div
+                                  key={i}
+                                  style={{ height: `${heights[i]}%` }}
+                                  className={`flex-1 rounded-sm transition-colors duration-300 ${
+                                    filled
+                                      ? 'bg-red-400'
+                                      : isYtPreviewPlaying && i === ytPreviewElapsed
+                                      ? 'bg-white animate-pulse'
+                                      : 'bg-white/20'
+                                  } ${isYtPreviewPlaying && i === ytPreviewElapsed ? 'scale-y-110' : ''}`}
+                                />
+                              );
+                            })}
+                          </div>
+
+                          {/* Progress track */}
+                          <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-red-500 rounded-full transition-all duration-1000"
+                              style={{ width: isYtPreviewPlaying ? `${(ytPreviewElapsed / 30) * 100}%` : '0%' }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Timer + label */}
+                        <div className="shrink-0 text-right">
+                          {isYtPreviewPlaying ? (
+                            <>
+                              <p className="text-[11px] font-mono text-red-400 font-bold tabular-nums">
+                                {ytPreviewElapsed}s / 30s
+                              </p>
+                              <p className="text-[10px] font-mono text-text-dim">Memutar...</p>
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-[11px] font-mono text-text-dim">
+                                {Math.floor(ytStartSecond/60)}:{(ytStartSecond%60).toString().padStart(2,'0')}
+                              </p>
+                              <p className="text-[10px] font-mono text-text-dim/60">Preview</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Hidden YouTube iframe for audio streaming */}
+                      {isYtPreviewPlaying && selectedYtTrack?.videoId && (
+                        <iframe
+                          key={`yt-preview-${ytPreviewKey}`}
+                          src={`https://www.youtube.com/embed/${selectedYtTrack.videoId}?start=${ytStartSecond}&autoplay=1&controls=0&mute=0&rel=0&modestbranding=1`}
+                          allow="autoplay; encrypted-media"
+                          sandbox="allow-scripts allow-same-origin allow-presentation"
+                          width="0"
+                          height="0"
+                          style={{ position: 'absolute', opacity: 0, pointerEvents: 'none' }}
+                        />
+                      )}
                     </div>
 
                     {/* Bot Endpoint Toggle & Configuration */}
