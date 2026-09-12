@@ -8,6 +8,9 @@ import Projects from '@/components/Projects';
 import Frequency from '@/components/Frequency';
 import Footer from '@/components/Footer';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function Home() {
   return (
     <>

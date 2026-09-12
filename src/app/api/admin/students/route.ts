@@ -5,6 +5,9 @@ import initialStudents from '@/data/students.json';
 const RELATIVE_PATH = 'data mahasiswa.json';
 const DEFAULT_STUDENTS_JSON = JSON.stringify(initialStudents, null, 4);
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // GET: Fetch current student data from JSON file
 export async function GET() {
   try {
@@ -20,17 +23,31 @@ export async function GET() {
       data = initialStudents;
     }
 
-    return NextResponse.json({
-      success: true,
-      data,
-      raw: JSON.stringify(data, null, 4),
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data,
+        raw: JSON.stringify(data, null, 4),
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        },
+      }
+    );
   } catch {
-    return NextResponse.json({
-      success: true,
-      data: initialStudents,
-      raw: DEFAULT_STUDENTS_JSON,
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: initialStudents,
+        raw: DEFAULT_STUDENTS_JSON,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        },
+      }
+    );
   }
 }
 
