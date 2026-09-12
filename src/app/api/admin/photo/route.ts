@@ -41,38 +41,55 @@ export async function POST(request: Request) {
       const buffer = Buffer.from(arrayBuffer);
       let photoUrl = '';
 
-      // Try saving physical file to public/students/
-      try {
-        await fs.mkdir(STUDENTS_DIR, { recursive: true });
+      const targetFilename = `${id}${ext}`;
+      const hfToken = process.env.HF_TOKEN || process.env.HUGGINGFACE_TOKEN;
+      const hfRepo = process.env.HF_DATASET_REPO;
 
-        // Clean up previous files for this student ID
+      // Priority 1: DIRECT TO HUGGING FACE CLOUD STORAGE
+      if (hfToken && hfRepo) {
         try {
-          const existingFiles = await fs.readdir(STUDENTS_DIR);
-          for (const f of existingFiles) {
-            if (f.startsWith(`${id}.`)) {
-              await fs.unlink(path.join(STUDENTS_DIR, f)).catch(() => {});
-            }
-          }
-        } catch {
-          // ignore
+          const { uploadFile } = await import('@huggingface/hub');
+          const hfPath = `students/${targetFilename}`;
+          await uploadFile({
+            repo: { type: 'dataset', name: hfRepo },
+            credentials: { accessToken: hfToken },
+            file: {
+              path: hfPath,
+              content: new Blob([buffer]),
+            },
+          });
+          photoUrl = `https://huggingface.co/datasets/${hfRepo}/resolve/main/${hfPath}`;
+          console.info(`[PhotoAPI] Uploaded photo directly to Hugging Face: ${photoUrl}`);
+        } catch (hfErr) {
+          console.warn('[PhotoAPI] Hugging Face upload failed, trying local:', hfErr);
         }
+      }
 
-        const targetFilename = `${id}${ext}`;
-        const targetFilePath = path.join(STUDENTS_DIR, targetFilename);
-        await fs.writeFile(targetFilePath, buffer);
-        photoUrl = `/students/${targetFilename}`;
-      } catch (writeErr: any) {
-        // Fallback for Vercel Serverless EROFS: Convert to Base64 data URL
-        console.info(`[PhotoAPI] Falling back to base64 data URL due to read-only filesystem (${writeErr.code || writeErr.message})`);
-        const mimeType = file.type || 'image/jpeg';
-        photoUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
+      // Priority 2: Local disk (development)
+      if (!photoUrl) {
+        try {
+          await fs.mkdir(STUDENTS_DIR, { recursive: true });
+          const targetFilePath = path.join(STUDENTS_DIR, targetFilename);
+          await fs.writeFile(targetFilePath, buffer);
+          photoUrl = `/students/${targetFilename}`;
+        } catch (writeErr: any) {
+          // Priority 3: Base64 data URL fallback
+          const mimeType = file.type || 'image/jpeg';
+          photoUrl = `data:${mimeType};base64,${buffer.toString('base64')}`;
+        }
       }
 
       // Automatically update photo field in data mahasiswa.json via serverStorage
       try {
-        const rawContent = await readStorageFile(RELATIVE_DATA_PATH, '[]');
-        const students = JSON.parse(rawContent);
-        const updated = students.map((s: { id: number | string; photo?: string }) => {
+        const rawContent = await readStorageFile(RELATIVE_DATA_PATH);
+        let studentsList: any[] = [];
+        try {
+          studentsList = JSON.parse(rawContent);
+        } catch {
+          studentsList = [];
+        }
+
+        const updated = studentsList.map((s: { id: number | string; photo?: string }) => {
           if (String(s.id) === String(id)) {
             return { ...s, photo: photoUrl };
           }

@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readStorageFile, writeStorageFile } from '@/lib/serverStorage';
 import type { SlideItem } from '@/types';
+import initialJourney from '@/data/journey.json';
 
 const RELATIVE_PATH = 'src/data/journey.json';
 const API_SECRET = process.env.STORY_BOT_SECRET || 'cef2024';
+const DEFAULT_JOURNEY_JSON = JSON.stringify(initialJourney, null, 2);
 
 async function getSlides(): Promise<SlideItem[]> {
   try {
-    const raw = await readStorageFile(RELATIVE_PATH, '[]');
-    return JSON.parse(raw);
+    const raw = await readStorageFile(RELATIVE_PATH, DEFAULT_JOURNEY_JSON);
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      parsed = initialJourney;
+    }
+
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return initialJourney as SlideItem[];
+    }
+    return parsed;
   } catch {
-    return [];
+    return initialJourney as SlideItem[];
   }
 }
 

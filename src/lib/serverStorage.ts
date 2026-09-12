@@ -26,27 +26,13 @@ export async function readStorageFile(
   relativePath: string,
   defaultContent: string = '[]'
 ): Promise<string> {
+  const safeFilename = path.basename(relativePath);
   const cacheKey = relativePath.replace(/\\/g, '/');
 
-  // Tier 1: In-memory cache
-  if (memoryCache.has(cacheKey)) {
-    return memoryCache.get(cacheKey)!;
-  }
-
-  // Tier 2: /tmp directory (used on Vercel/serverless)
-  const safeFilename = path.basename(relativePath);
-  const tmpPath = path.join('/tmp', safeFilename);
-  try {
-    const tmpContent = await fs.readFile(tmpPath, 'utf-8');
-    memoryCache.set(cacheKey, tmpContent);
-    return tmpContent;
-  } catch {
-    // File not in /tmp, continue to project dir
-  }
-
-  // Tier 2.5: Cloud Storage (Hugging Face Dataset sync if configured)
+  // Priority 1: DIRECT TO HUGGING FACE CLOUD DATASET (Primary Source)
   const hfToken = process.env.HF_TOKEN || process.env.HUGGINGFACE_TOKEN;
   const hfRepo = process.env.HF_DATASET_REPO;
+
   if (hfRepo) {
     try {
       const hfUrl = `https://huggingface.co/datasets/${hfRepo}/raw/main/${safeFilename}`;
@@ -54,27 +40,83 @@ export async function readStorageFile(
         headers: hfToken ? { Authorization: `Bearer ${hfToken}` } : {},
         cache: 'no-store',
       });
+
       if (res.ok) {
         const cloudContent = await res.text();
-        if (cloudContent && cloudContent.trim().length > 0) {
+        if (
+          cloudContent &&
+          cloudContent.trim().length > 0 &&
+          cloudContent.trim() !== '[]' &&
+          !cloudContent.includes('404: Not Found')
+        ) {
           memoryCache.set(cacheKey, cloudContent);
           return cloudContent;
         }
+      } else if (res.status === 404 && hfToken && defaultContent && defaultContent !== '[]') {
+        // First-time setup: Auto-seed initial content directly to Hugging Face dataset!
+        try {
+          const { uploadFile } = await import('@huggingface/hub');
+          await uploadFile({
+            repo: { type: 'dataset', name: hfRepo },
+            credentials: { accessToken: hfToken },
+            file: {
+              path: safeFilename,
+              content: new Blob([defaultContent]),
+            },
+          });
+          console.info(`[ServerStorage] Initialized and seeded ${safeFilename} to Hugging Face Dataset!`);
+        } catch (e) {
+          console.warn('[ServerStorage] Auto-seed warning:', e);
+        }
+        memoryCache.set(cacheKey, defaultContent);
+        return defaultContent;
       }
-    } catch {
-      // Continue to physical file
+    } catch (hfErr) {
+      console.warn('[ServerStorage] Hugging Face read failed, falling back to local:', hfErr);
     }
   }
 
-  // Tier 3: Physical project file
-  const projectPath = path.join(/*turbopackIgnore: true*/ process.cwd(), relativePath);
-  try {
-    const fileContent = await fs.readFile(projectPath, 'utf-8');
-    memoryCache.set(cacheKey, fileContent);
-    return fileContent;
-  } catch {
-    return defaultContent;
+  // Priority 2: In-memory cache (recent session writes)
+  if (memoryCache.has(cacheKey)) {
+    const cached = memoryCache.get(cacheKey)!;
+    if (cached && cached.trim() !== '[]') return cached;
   }
+
+  // Priority 3: Local project candidate paths (development & bundled files)
+  const candidatePaths = [
+    path.join(process.cwd(), 'src', 'data', safeFilename),
+    path.join(process.cwd(), relativePath),
+  ];
+
+  for (const p of candidatePaths) {
+    try {
+      const fileContent = await fs.readFile(p, 'utf-8');
+      if (fileContent && fileContent.trim().length > 0 && fileContent.trim() !== '[]') {
+        memoryCache.set(cacheKey, fileContent);
+        return fileContent;
+      }
+    } catch {
+      // Continue to next candidate
+    }
+  }
+
+  // Priority 4: /tmp ephemeral disk (serverless fallback)
+  const tmpPath = path.join('/tmp', safeFilename);
+  try {
+    const tmpContent = await fs.readFile(tmpPath, 'utf-8');
+    if (tmpContent && tmpContent.trim().length > 0 && tmpContent.trim() !== '[]') {
+      memoryCache.set(cacheKey, tmpContent);
+      return tmpContent;
+    }
+  } catch {
+    // Continue
+  }
+
+  // Priority 5: Fallback to bundled default content (Never return empty array)
+  if (defaultContent && defaultContent.trim().length > 0) {
+    memoryCache.set(cacheKey, defaultContent);
+  }
+  return defaultContent;
 }
 
 export interface WriteResult {

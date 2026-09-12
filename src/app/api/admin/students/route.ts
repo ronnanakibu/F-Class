@@ -1,19 +1,36 @@
 import { NextResponse } from 'next/server';
 import { readStorageFile, writeStorageFile } from '@/lib/serverStorage';
+import initialStudents from '@/data/students.json';
 
 const RELATIVE_PATH = 'data mahasiswa.json';
+const DEFAULT_STUDENTS_JSON = JSON.stringify(initialStudents, null, 4);
 
 // GET: Fetch current student data from JSON file
 export async function GET() {
   try {
-    const rawContent = await readStorageFile(RELATIVE_PATH, '[]');
-    const data = JSON.parse(rawContent);
-    return NextResponse.json({ success: true, data, raw: rawContent });
-  } catch (error) {
-    return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to read data' },
-      { status: 500 }
-    );
+    const rawContent = await readStorageFile(RELATIVE_PATH, DEFAULT_STUDENTS_JSON);
+    let data;
+    try {
+      data = JSON.parse(rawContent);
+    } catch {
+      data = initialStudents;
+    }
+
+    if (!Array.isArray(data) || data.length === 0) {
+      data = initialStudents;
+    }
+
+    return NextResponse.json({
+      success: true,
+      data,
+      raw: JSON.stringify(data, null, 4),
+    });
+  } catch {
+    return NextResponse.json({
+      success: true,
+      data: initialStudents,
+      raw: DEFAULT_STUDENTS_JSON,
+    });
   }
 }
 
