@@ -1,19 +1,51 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { students } from '@/data/students';
+import { students as staticStudents } from '@/data/students';
+import type { Student } from '@/types';
 import FilterBar from './FilterBar';
 import StudentCard from './StudentCard';
 import SectionReveal from './SectionReveal';
 
 export default function Students() {
+  const [studentList, setStudentList] = useState<Student[]>(staticStudents);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
 
-  // Dynamic role categories based on data
+  // Pull live synced data from cloud/Hugging Face on mount
+  useEffect(() => {
+    fetch('/api/admin/students')
+      .then((res) => res.json())
+      .then((resData) => {
+        if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+          const mapped: Student[] = resData.data.map((item: any) => ({
+            id: String(item.id),
+            name: item.name,
+            nim: item.nim,
+            alias: item.alias,
+            nickname: item.alias || item.nickname || '',
+            role: item.role || 'Anggota',
+            instagram: item.instagram || item.socials?.instagram || '',
+            katakata: item.katakata,
+            quote: item.katakata || item.quote || '',
+            photo: item.photo,
+            interests: item.interests || [],
+            skills: item.skills || [],
+            socials: {
+              ...item.socials,
+              instagram: item.instagram || item.socials?.instagram || '',
+            },
+          }));
+          setStudentList(mapped);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Dynamic role categories based on live data
   const categories = useMemo(() => {
-    const rawRoles = Array.from(new Set(students.map((s) => s.role).filter(Boolean))) as string[];
+    const rawRoles = Array.from(new Set(studentList.map((s) => s.role).filter(Boolean))) as string[];
     const priority = ['Komting', 'Wakil Komting', 'Sekretaris', 'Bendahara', 'Anggota'];
     rawRoles.sort((a, b) => {
       const idxA = priority.indexOf(a);
@@ -24,11 +56,11 @@ export default function Students() {
       return a.localeCompare(b);
     });
     return ['All', ...rawRoles];
-  }, []);
+  }, [studentList]);
 
   // Filter students
   const filtered = useMemo(() => {
-    return students.filter((student) => {
+    return studentList.filter((student) => {
       const q = searchQuery.toLowerCase().trim();
       const matchesSearch =
         q === '' ||
@@ -45,7 +77,7 @@ export default function Students() {
 
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, activeCategory]);
+  }, [studentList, searchQuery, activeCategory]);
 
   return (
     <section id="students" className="py-24 md:py-32 relative">

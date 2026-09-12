@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import type { Student } from '@/types';
 import { getInitials, stringToHue } from '@/lib/utils';
@@ -19,6 +19,12 @@ export default function StudentCard({ student, index }: StudentCardProps) {
   const hasPhotoConfigured = Boolean(student.photo && student.photo.trim() !== '');
   const [imgError, setImgError] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+
+  // Reset error & loaded states whenever student.photo updates
+  useEffect(() => {
+    setImgError(false);
+    setImgLoaded(false);
+  }, [student.photo]);
 
   // Show photo only if configured and no load error occurred
   const showPhoto = hasPhotoConfigured && !imgError;
@@ -81,8 +87,11 @@ export default function StudentCard({ student, index }: StudentCardProps) {
         {/* Render photo only if configured in data */}
         {showPhoto && (
           <img
+            key={student.photo}
             src={student.photo}
             alt=""
+            loading="lazy"
+            decoding="async"
             onLoad={() => setImgLoaded(true)}
             onError={() => setImgError(true)}
             className={`absolute inset-0 w-full h-full rounded-full object-cover transition-opacity duration-300 ${

@@ -4665,6 +4665,11 @@ function PhotoAvatar({ student, size = 'w-12 h-12' }: { student: Student; size?:
   const [loadError, setLoadError] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
+  useEffect(() => {
+    setLoadError(false);
+    setLoaded(false);
+  }, [student.photo]);
+
   const showImg = hasPhoto && !loadError;
 
   return (
@@ -4682,8 +4687,11 @@ function PhotoAvatar({ student, size = 'w-12 h-12' }: { student: Student; size?:
       )}
       {showImg && (
         <img
+          key={student.photo}
           src={student.photo}
           alt=""
+          loading="lazy"
+          decoding="async"
           onLoad={() => setLoaded(true)}
           onError={() => setLoadError(true)}
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${
