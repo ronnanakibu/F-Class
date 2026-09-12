@@ -46,6 +46,8 @@ import {
   ChevronDown,
   Download,
   Copy,
+  Scissors,
+  FileAudio,
 } from 'lucide-react';
 import { getInitials, stringToHue } from '@/lib/utils';
 import ImageCropperModal from '@/components/ImageCropperModal';
@@ -167,10 +169,15 @@ export default function AdminPage() {
   const [adminPlayingAudioId, setAdminPlayingAudioId] = useState<string | null>(null);
   const adminAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Music Auto-Search State
+  // Music Auto-Search & Provider State
+  const [musicSearchProvider, setMusicSearchProvider] = useState<'itunes' | 'youtube' | 'upload'>('itunes');
   const [musicSearchQuery, setMusicSearchQuery] = useState('');
   const [isSearchingMusic, setIsSearchingMusic] = useState(false);
   const [musicSearchResults, setMusicSearchResults] = useState<any[]>([]);
+  const [selectedYtTrack, setSelectedYtTrack] = useState<any | null>(null);
+  const [ytStartSecond, setYtStartSecond] = useState<number>(60);
+  const [isTrimmingAudio, setIsTrimmingAudio] = useState(false);
+  const [trimFeedback, setTrimFeedback] = useState<string | null>(null);
 
   // Song Form State
   const [formSongTitle, setFormSongTitle] = useState('');
@@ -663,17 +670,19 @@ export default function AdminPage() {
     if (!musicSearchQuery.trim()) return;
 
     setIsSearchingMusic(true);
+    setSelectedYtTrack(null);
+    setTrimFeedback(null);
     try {
       const isUrl = musicSearchQuery.includes('http');
       const param = isUrl
         ? `url=${encodeURIComponent(musicSearchQuery.trim())}`
         : `q=${encodeURIComponent(musicSearchQuery.trim())}`;
-      const res = await fetch(`/api/music/search?${param}`);
+      const res = await fetch(`/api/music/search?${param}&provider=${musicSearchProvider}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.results)) {
         setMusicSearchResults(data.results);
         if (data.results.length === 0) {
-          showToast('Tidak ada lagu ditemukan. Coba judul atau artis lain.', 'info');
+          showToast('Tidak ada lagu ditemukan. Coba kata kunci atau judul lain.', 'info');
         }
       } else {
         showToast(data.error || 'Gagal mencari metadata lagu', 'error');
@@ -690,17 +699,99 @@ export default function AdminPage() {
     setFormSongArtist(track.artist);
     setFormSongAlbum(track.album || '');
     setFormSongCoverUrl(track.coverUrl || '');
-    setFormSongAudioUrl(track.audioUrl || '');
     setFormSongSpotifyUrl(track.spotifyUrl || '');
     setFormSongAppleMusicUrl(track.appleMusicUrl || '');
-    showToast(`Metadata "${track.title}" berhasil disinkronkan otomatis!`, 'success');
+
+    if (track.provider === 'youtube') {
+      setSelectedYtTrack(track);
+      const dur = track.durationSeconds || 180;
+      const defaultStart = Math.min(60, Math.max(0, Math.floor(dur / 3)));
+      setYtStartSecond(defaultStart);
+      setFormSongAudioUrl(''); // will be generated/trimmed
+      setTrimFeedback(null);
+      showToast(`Lagu YouTube "${track.title}" dipilih! Tentukan 30 detik yang ingin diambil.`, 'info');
+    } else {
+      setSelectedYtTrack(null);
+      setFormSongAudioUrl(track.audioUrl || '');
+      setTrimFeedback(null);
+      showToast(`Metadata "${track.title}" berhasil disinkronkan otomatis!`, 'success');
+    }
+  };
+
+  const handleTrimYouTubeAudio = async () => {
+    if (!selectedYtTrack) return;
+    setIsTrimmingAudio(true);
+    setTrimFeedback(null);
+
+    try {
+      const key = getActiveApiKey();
+      const res = await fetch('/api/music/trim', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': key,
+        },
+        body: JSON.stringify({
+          videoId: selectedYtTrack.videoId,
+          youtubeUrl: selectedYtTrack.youtubeUrl,
+          startSecond: ytStartSecond,
+          duration: 30,
+          title: formSongTitle,
+          artist: formSongArtist,
+          apiKey: key,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success && data.audioUrl) {
+        setFormSongAudioUrl(data.audioUrl);
+        setTrimFeedback(`Audio 30s berhasil dipotong dari detik ${ytStartSecond}s!`);
+        showToast(`Cuplikan 30 detik berhasil di-generate!`, 'success');
+      } else if (data.needsMicroservice) {
+        setTrimFeedback(
+          'Microservice yt-dlp belum terhubung. Konfigurasikan YTDLP_API_URL (Hugging Face Space) di environment untuk memotong audio otomatis.'
+        );
+        showToast('Microservice yt-dlp belum dikonfigurasi.', 'info');
+      } else {
+        showToast(data.error || 'Gagal memotong audio', 'error');
+        setTrimFeedback(data.error);
+      }
+    } catch {
+      showToast('Terjadi kesalahan saat memotong audio', 'error');
+    } finally {
+      setIsTrimmingAudio(false);
+    }
+  };
+
+  const handleAudioFileUpload = (file: File) => {
+    if (!file.type.startsWith('audio/') && !file.name.match(/\.(mp3|wav|m4a|aac|ogg)$/i)) {
+      showToast('Pilih file audio valid (.mp3, .m4a, .wav)', 'error');
+      return;
+    }
+
+    try {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          setFormSongAudioUrl(reader.result);
+          showToast(`File audio "${file.name}" berhasil dimuat!`, 'success');
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch {
+      showToast('Gagal membaca file audio', 'error');
+    }
   };
 
   const openCreateSongModal = () => {
     setEditingSong(null);
     setIsCreatingNewSong(true);
+    setMusicSearchProvider('itunes');
     setMusicSearchQuery('');
     setMusicSearchResults([]);
+    setSelectedYtTrack(null);
+    setTrimFeedback(null);
     setFormSongTitle('');
     setFormSongArtist('');
     setFormSongAlbum('');
@@ -717,8 +808,11 @@ export default function AdminPage() {
   const openEditSongModal = (song: Song) => {
     setEditingSong(song);
     setIsCreatingNewSong(false);
+    setMusicSearchProvider('itunes');
     setMusicSearchQuery('');
     setMusicSearchResults([]);
+    setSelectedYtTrack(null);
+    setTrimFeedback(null);
     setFormSongTitle(song.title);
     setFormSongArtist(song.artist);
     setFormSongAlbum(song.album || '');
@@ -4347,39 +4441,137 @@ export default function AdminPage() {
                 </button>
               </div>
 
-              {/* SEARCH ENGINE SECTION (FOR AUTO-METADATA) */}
+              {/* SEARCH ENGINE SECTION (FOR AUTO-METADATA & AUDIO PROVIDER) */}
               <div className="mb-5 p-3.5 rounded-2xl bg-bg-surface/80 border border-accent/30 space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-heading font-semibold text-accent flex items-center gap-1.5">
                     <Sparkles size={13} />
-                    <span>Cari Lagu Online (Auto-Fetch Metadata &amp; Audio Preview)</span>
+                    <span>Pilih Sumber / Provider Lagu:</span>
                   </label>
-                  <span className="text-[10px] font-mono text-text-dim">iTunes &amp; Spotify</span>
+                  <span className="text-[10px] font-mono text-text-dim">
+                    {musicSearchProvider === 'itunes'
+                      ? 'Apple Music CDN'
+                      : musicSearchProvider === 'youtube'
+                      ? 'yt-dlp Engine'
+                      : 'Lokal Device'}
+                  </span>
                 </div>
 
-                <form onSubmit={handleSearchMusicOnline} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={musicSearchQuery}
-                    onChange={(e) => setMusicSearchQuery(e.target.value)}
-                    placeholder="Ketik judul lagu, penyanyi, atau link Spotify..."
-                    className="flex-1 px-3 py-2 bg-bg-elevated border border-border rounded-xl text-xs text-text-primary placeholder:text-text-dim focus:outline-none focus:border-accent"
-                  />
+                {/* PROVIDER SELECTOR BUTTONS */}
+                <div className="flex items-center gap-1.5 p-1 bg-bg-elevated rounded-xl border border-border">
                   <button
-                    type="submit"
-                    disabled={isSearchingMusic}
-                    className="px-3.5 py-2 rounded-xl bg-accent hover:bg-accent/90 text-bg-primary text-xs font-heading font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0"
+                    type="button"
+                    onClick={() => {
+                      setMusicSearchProvider('itunes');
+                      setMusicSearchResults([]);
+                      setSelectedYtTrack(null);
+                      setTrimFeedback(null);
+                    }}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-heading font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      musicSearchProvider === 'itunes'
+                        ? 'bg-accent text-bg-primary shadow-sm font-bold'
+                        : 'text-text-muted hover:text-text-primary'
+                    }`}
                   >
-                    <Search size={13} className={isSearchingMusic ? 'animate-spin' : ''} />
-                    <span>{isSearchingMusic ? 'Mencari...' : 'Cari'}</span>
+                    <Music size={13} />
+                    <span>Apple Music</span>
                   </button>
-                </form>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMusicSearchProvider('youtube');
+                      setMusicSearchResults([]);
+                      setSelectedYtTrack(null);
+                      setTrimFeedback(null);
+                    }}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-heading font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      musicSearchProvider === 'youtube'
+                        ? 'bg-red-500 text-white shadow-sm font-bold'
+                        : 'text-text-muted hover:text-text-primary'
+                    }`}
+                  >
+                    <Video size={13} />
+                    <span>YouTube (yt-dlp)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMusicSearchProvider('upload');
+                      setMusicSearchResults([]);
+                      setSelectedYtTrack(null);
+                      setTrimFeedback(null);
+                    }}
+                    className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-heading font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      musicSearchProvider === 'upload'
+                        ? 'bg-purple-500 text-white shadow-sm font-bold'
+                        : 'text-text-muted hover:text-text-primary'
+                    }`}
+                  >
+                    <Upload size={13} />
+                    <span>Upload File</span>
+                  </button>
+                </div>
+
+                {/* PROVIDER 1 & 2: SEARCH FORM */}
+                {musicSearchProvider !== 'upload' && (
+                  <form onSubmit={handleSearchMusicOnline} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={musicSearchQuery}
+                      onChange={(e) => setMusicSearchQuery(e.target.value)}
+                      placeholder={
+                        musicSearchProvider === 'youtube'
+                          ? 'Cari di YouTube (contoh: Hindia Evaluasi, NIKI, Bernadya)...'
+                          : 'Cari di iTunes (contoh: Coldplay, NIKI, Hindia)...'
+                      }
+                      className="flex-1 px-3 py-2 bg-bg-elevated border border-border rounded-xl text-xs text-text-primary placeholder:text-text-dim focus:outline-none focus:border-accent"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSearchingMusic}
+                      className={`px-3.5 py-2 rounded-xl text-xs font-heading font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0 ${
+                        musicSearchProvider === 'youtube'
+                          ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
+                          : 'bg-accent hover:bg-accent/90 text-bg-primary'
+                      }`}
+                    >
+                      <Search size={13} className={isSearchingMusic ? 'animate-spin' : ''} />
+                      <span>{isSearchingMusic ? 'Mencari...' : 'Cari'}</span>
+                    </button>
+                  </form>
+                )}
+
+                {/* PROVIDER 3: UPLOAD FILE DIRECT */}
+                {musicSearchProvider === 'upload' && (
+                  <div className="p-4 rounded-xl border-2 border-dashed border-purple-500/30 hover:border-purple-500/60 bg-purple-500/5 text-center transition-colors">
+                    <FileAudio size={24} className="mx-auto mb-2 text-purple-400" />
+                    <p className="text-xs font-heading font-semibold text-text-primary mb-1">
+                      Upload File Audio (MP3 / M4A / WAV)
+                    </p>
+                    <p className="text-[11px] text-text-muted font-mono mb-3">
+                      Pilih file audio lagu dari perangkatmu untuk dijadikan preview audio.
+                    </p>
+                    <label className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-500 hover:bg-purple-600 text-white text-xs font-heading font-semibold cursor-pointer transition-colors shadow-sm">
+                      <Upload size={13} />
+                      <span>Pilih File Dari Komputer/HP</span>
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleAudioFileUpload(file);
+                        }}
+                      />
+                    </label>
+                  </div>
+                )}
 
                 {/* Search Results Drawer */}
                 {musicSearchResults.length > 0 && (
-                  <div className="space-y-2 pt-2 border-t border-border/50 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                  <div className="space-y-2 pt-2 border-t border-border/50 max-h-52 overflow-y-auto pr-1 custom-scrollbar">
                     <p className="text-[10px] font-mono text-text-dim">
-                      Hasil Ditemukan ({musicSearchResults.length}) — Klik &ldquo;Gunakan Lagu Ini&rdquo; untuk mengisi form otomatis:
+                      Hasil Ditemukan ({musicSearchResults.length}) — Klik &ldquo;Pilih Lagu&rdquo; untuk mengisi form:
                     </p>
                     {musicSearchResults.map((track) => (
                       <div
@@ -4390,27 +4582,129 @@ export default function AdminPage() {
                           <img
                             src={track.coverUrl}
                             alt=""
-                            className="w-9 h-9 rounded-lg object-cover shrink-0 bg-black"
+                            className="w-10 h-10 rounded-lg object-cover shrink-0 bg-black border border-border/50"
                           />
                           <div className="min-w-0">
                             <p className="text-xs font-heading font-semibold text-text-primary truncate">
                               {track.title}
                             </p>
-                            <p className="text-[11px] font-mono text-text-muted truncate">
-                              {track.artist} {track.album ? `• ${track.album}` : ''}
-                            </p>
+                            <div className="flex items-center gap-2 text-[11px] font-mono text-text-muted truncate">
+                              <span>{track.artist}</span>
+                              {track.durationText && (
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-white/5 border border-white/10 text-text-dim">
+                                  ⏱️ {track.durationText}
+                                </span>
+                              )}
+                              {track.provider === 'youtube' && (
+                                <span className="text-[9px] px-1.5 py-0.2 rounded bg-red-500/20 text-red-400 font-bold border border-red-500/30">
+                                  YouTube
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
 
                         <button
                           type="button"
                           onClick={() => handleSelectSearchResult(track)}
-                          className="px-2.5 py-1.5 rounded-lg bg-accent text-bg-primary text-[10px] font-heading font-bold shrink-0 hover:bg-accent/90 transition-colors cursor-pointer"
+                          className={`px-2.5 py-1.5 rounded-lg text-[10px] font-heading font-bold shrink-0 transition-colors cursor-pointer ${
+                            track.provider === 'youtube'
+                              ? 'bg-red-500 hover:bg-red-600 text-white shadow-sm'
+                              : 'bg-accent hover:bg-accent/90 text-bg-primary'
+                          }`}
                         >
-                          Gunakan Lagu Ini
+                          Pilih Lagu
                         </button>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* YOUTUBE 30-SECOND SELECTOR (AUDIO TRIMMER) */}
+                {selectedYtTrack && (
+                  <div className="p-3.5 rounded-xl border border-red-500/40 bg-red-500/10 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Scissors size={14} className="text-red-400" />
+                        <span className="text-xs font-heading font-bold text-red-400">
+                          Seleksi 30 Detik Cuplikan (yt-dlp Trimmer)
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-text-dim">
+                        Durasi Asli: {selectedYtTrack.durationText || '3:30'}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-text-muted leading-relaxed">
+                      Geser slider di bawah untuk memilih bagian 30 detik yang ingin dijadikan cuplikan lagu (misalnya bagian reff/chorus):
+                    </p>
+
+                    {/* Slider Range */}
+                    <div className="space-y-1.5">
+                      <input
+                        type="range"
+                        min={0}
+                        max={Math.max(10, (selectedYtTrack.durationSeconds || 180) - 30)}
+                        step={1}
+                        value={ytStartSecond}
+                        onChange={(e) => setYtStartSecond(Number(e.target.value))}
+                        className="w-full accent-red-500 cursor-pointer"
+                      />
+
+                      <div className="flex items-center justify-between text-[11px] font-mono">
+                        <span className="text-red-400 font-semibold">
+                          Mulai: {Math.floor(ytStartSecond / 60)}:{(ytStartSecond % 60).toString().padStart(2, '0')}
+                        </span>
+                        <span className="text-text-dim font-bold">Durasi: 30 Detik</span>
+                        <span className="text-emerald-400 font-semibold">
+                          Selesai: {Math.floor((ytStartSecond + 30) / 60)}:{((ytStartSecond + 30) % 60).toString().padStart(2, '0')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Quick Preset Buttons */}
+                    <div className="flex items-center gap-1.5 flex-wrap pt-1">
+                      <span className="text-[10px] font-mono text-text-dim">Preset Cepat:</span>
+                      {[
+                        { label: 'Awal (00:00)', sec: 0 },
+                        { label: 'Bait 1 (00:30)', sec: 30 },
+                        { label: 'Reff 1 (01:00)', sec: 60 },
+                        { label: 'Reff 2 (01:30)', sec: 90 },
+                        { label: 'Bridge (02:00)', sec: 120 },
+                      ].map((preset) => (
+                        <button
+                          key={preset.sec}
+                          type="button"
+                          onClick={() => setYtStartSecond(preset.sec)}
+                          className={`px-2 py-0.5 rounded-md text-[10px] font-mono transition-colors cursor-pointer ${
+                            ytStartSecond === preset.sec
+                              ? 'bg-red-500 text-white font-bold'
+                              : 'bg-white/5 text-text-muted hover:text-white border border-white/10'
+                          }`}
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Action Button & Feedback */}
+                    <div className="pt-2 border-t border-red-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        onClick={handleTrimYouTubeAudio}
+                        disabled={isTrimmingAudio}
+                        className="px-3 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-heading font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                      >
+                        <Scissors size={13} className={isTrimmingAudio ? 'animate-spin' : ''} />
+                        <span>{isTrimmingAudio ? 'Memotong Audio 30 Detik...' : '⚡ Potong 30 Detik Ini (yt-dlp)'}</span>
+                      </button>
+
+                      {trimFeedback && (
+                        <span className="text-[11px] font-mono text-text-dim max-w-xs leading-tight">
+                          {trimFeedback}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
