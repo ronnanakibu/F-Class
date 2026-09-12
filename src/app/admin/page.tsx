@@ -48,6 +48,8 @@ import {
   Copy,
   Scissors,
   FileAudio,
+  Bot,
+  Radio,
 } from 'lucide-react';
 import { getInitials, stringToHue } from '@/lib/utils';
 import ImageCropperModal from '@/components/ImageCropperModal';
@@ -178,6 +180,14 @@ export default function AdminPage() {
   const [ytStartSecond, setYtStartSecond] = useState<number>(60);
   const [isTrimmingAudio, setIsTrimmingAudio] = useState(false);
   const [trimFeedback, setTrimFeedback] = useState<string | null>(null);
+
+  // Bot Endpoint State
+  const [useBotEndpoint, setUseBotEndpoint] = useState<boolean>(false);
+  const [botEndpointUrl, setBotEndpointUrl] = useState<string>('http://ap1.nzb.zelpstore.id:25637');
+  const [isTestingBotPing, setIsTestingBotPing] = useState<boolean>(false);
+  const [botPingStatus, setBotPingStatus] = useState<'idle' | 'online' | 'offline'>('idle');
+  const [botPingLatency, setBotPingLatency] = useState<number | null>(null);
+  const [botPingMessage, setBotPingMessage] = useState<string | null>(null);
 
   // Song Form State
   const [formSongTitle, setFormSongTitle] = useState('');
@@ -373,6 +383,66 @@ export default function AdminPage() {
       loadGodContent();
     }
   }, [isAuthenticated, loadData, loadStories, loadProjects, loadSongs, loadSlides, loadGodContent]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedUse = localStorage.getItem('cef_use_bot_endpoint');
+      if (savedUse !== null) {
+        setUseBotEndpoint(savedUse === 'true');
+      }
+      const savedUrl = localStorage.getItem('cef_bot_endpoint');
+      if (savedUrl) {
+        setBotEndpointUrl(savedUrl);
+      }
+    }
+  }, []);
+
+  const handleToggleBotEndpoint = (val: boolean) => {
+    setUseBotEndpoint(val);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cef_use_bot_endpoint', String(val));
+    }
+  };
+
+  const handleUpdateBotUrl = (url: string) => {
+    setBotEndpointUrl(url);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('cef_bot_endpoint', url);
+    }
+    setBotPingStatus('idle');
+    setBotPingMessage(null);
+  };
+
+  const handleTestBotPing = async () => {
+    if (!botEndpointUrl.trim()) {
+      showToast('Masukkan URL Bot Endpoint terlebih dahulu', 'error');
+      return;
+    }
+    setIsTestingBotPing(true);
+    setBotPingStatus('idle');
+    setBotPingMessage(null);
+
+    try {
+      const res = await fetch(`/api/music/ping?endpoint=${encodeURIComponent(botEndpointUrl.trim())}`);
+      const data = await res.json();
+      if (data.online) {
+        setBotPingStatus('online');
+        setBotPingLatency(data.latency);
+        setBotPingMessage(`Online (${data.latency}ms)`);
+        showToast(`Bot Endpoint aktif! Respons dalam ${data.latency}ms`, 'success');
+      } else {
+        setBotPingStatus('offline');
+        setBotPingMessage(data.error || 'Offline');
+        showToast(data.error || 'Bot Endpoint tidak merespons', 'error');
+      }
+    } catch {
+      setBotPingStatus('offline');
+      setBotPingMessage('Koneksi gagal');
+      showToast('Gagal menghubungi endpoint bot', 'error');
+    } finally {
+      setIsTestingBotPing(false);
+    }
+  };
 
   const handleUploadStory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -739,6 +809,7 @@ export default function AdminPage() {
           title: formSongTitle,
           artist: formSongArtist,
           apiKey: key,
+          botEndpoint: useBotEndpoint && botEndpointUrl.trim() ? botEndpointUrl.trim() : undefined,
         }),
       });
 
@@ -746,13 +817,14 @@ export default function AdminPage() {
 
       if (data.success && data.audioUrl) {
         setFormSongAudioUrl(data.audioUrl);
-        setTrimFeedback(`Audio 30s berhasil dipotong dari detik ${ytStartSecond}s!`);
+        const sourceMsg = useBotEndpoint ? 'via Bot Endpoint' : 'via Cloud Space';
+        setTrimFeedback(`Audio 30s berhasil dipotong dari detik ${ytStartSecond}s (${sourceMsg})!`);
         showToast(`Cuplikan 30 detik berhasil di-generate!`, 'success');
       } else if (data.needsMicroservice) {
         setTrimFeedback(
-          'Microservice yt-dlp belum terhubung. Konfigurasikan YTDLP_API_URL (Hugging Face Space) di environment untuk memotong audio otomatis.'
+          'Microservice yt-dlp / Bot endpoint belum terhubung. Aktifkan tombol "Gunakan Bot Endpoint" di bawah untuk menggunakan bot kamu.'
         );
-        showToast('Microservice yt-dlp belum dikonfigurasi.', 'info');
+        showToast('Microservice yt-dlp / Bot endpoint belum dikonfigurasi.', 'info');
       } else {
         showToast(data.error || 'Gagal memotong audio', 'error');
         setTrimFeedback(data.error);
@@ -4687,16 +4759,130 @@ export default function AdminPage() {
                       ))}
                     </div>
 
+                    {/* Bot Endpoint Toggle & Configuration */}
+                    <div className="pt-2 border-t border-red-500/20 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleBotEndpoint(!useBotEndpoint)}
+                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-heading font-medium transition-all cursor-pointer border ${
+                            useBotEndpoint
+                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm shadow-amber-500/10'
+                              : 'bg-white/5 text-text-muted hover:text-white border-white/10 hover:border-white/20'
+                          }`}
+                        >
+                          <Bot size={14} className={useBotEndpoint ? 'text-amber-400' : 'text-text-dim'} />
+                          <span>🤖 Gunakan Bot Endpoint</span>
+                          <span
+                            className={`w-2 h-2 rounded-full transition-colors ${
+                              useBotEndpoint
+                                ? botPingStatus === 'online'
+                                  ? 'bg-emerald-400 shadow-sm shadow-emerald-400'
+                                  : 'bg-amber-400'
+                                : 'bg-white/20'
+                            }`}
+                          />
+                        </button>
+
+                        {useBotEndpoint && botPingMessage && (
+                          <span
+                            className={`text-[11px] font-mono flex items-center gap-1 ${
+                              botPingStatus === 'online' ? 'text-emerald-400' : 'text-rose-400'
+                            }`}
+                          >
+                            {botPingStatus === 'online' ? <Check size={12} /> : <AlertCircle size={12} />}
+                            {botPingMessage}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Expandable Bot Endpoint Setting Card */}
+                      <AnimatePresence>
+                        {useBotEndpoint && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="p-3 rounded-xl bg-black/40 border border-amber-500/30 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <label className="text-[11px] font-mono text-amber-400/90 font-medium flex items-center gap-1.5">
+                                  <Radio size={12} />
+                                  <span>URL Server Bot WABOT 2.0 / Audio Endpoint</span>
+                                </label>
+                                <span className="text-[10px] font-mono text-text-dim">Auto-saved</span>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  value={botEndpointUrl}
+                                  onChange={(e) => handleUpdateBotUrl(e.target.value)}
+                                  placeholder="http://ap1.nzb.zelpstore.id:25637"
+                                  className="flex-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs font-mono text-white placeholder:text-text-dim/50 focus:outline-none focus:border-amber-500/60"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={handleTestBotPing}
+                                  disabled={isTestingBotPing || !botEndpointUrl.trim()}
+                                  className="px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-heading font-medium transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0"
+                                >
+                                  <RefreshCw size={12} className={isTestingBotPing ? 'animate-spin' : ''} />
+                                  <span>{isTestingBotPing ? 'Testing...' : 'Tes Ping'}</span>
+                                </button>
+                              </div>
+
+                              {/* Quick Presets */}
+                              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                                <span className="text-[10px] font-mono text-text-dim">Preset Host:</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateBotUrl('http://ap1.nzb.zelpstore.id:25637')}
+                                  className="px-2 py-0.5 rounded text-[10px] font-mono bg-white/5 hover:bg-white/10 text-text-muted hover:text-white border border-white/10 cursor-pointer"
+                                >
+                                  Pterodactyl (ap1.nzb:25637)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateBotUrl('http://localhost:25637')}
+                                  className="px-2 py-0.5 rounded text-[10px] font-mono bg-white/5 hover:bg-white/10 text-text-muted hover:text-white border border-white/10 cursor-pointer"
+                                >
+                                  Localhost:25637
+                                </button>
+                              </div>
+
+                              <p className="text-[10px] text-text-dim leading-relaxed">
+                                Audio 30 detik YouTube akan di-stream dan dipotong langsung oleh Node.js & FFmpeg bot kamu tanpa batas kuota Hugging Face Space.
+                              </p>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
                     {/* Action Button & Feedback */}
                     <div className="pt-2 border-t border-red-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                       <button
                         type="button"
                         onClick={handleTrimYouTubeAudio}
                         disabled={isTrimmingAudio}
-                        className="px-3 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-heading font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                        className={`px-3 py-2 rounded-xl text-white text-xs font-heading font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50 ${
+                          useBotEndpoint
+                            ? 'bg-amber-600 hover:bg-amber-500'
+                            : 'bg-red-500 hover:bg-red-600'
+                        }`}
                       >
                         <Scissors size={13} className={isTrimmingAudio ? 'animate-spin' : ''} />
-                        <span>{isTrimmingAudio ? 'Memotong Audio 30 Detik...' : '⚡ Potong 30 Detik Ini (yt-dlp)'}</span>
+                        <span>
+                          {isTrimmingAudio
+                            ? useBotEndpoint
+                              ? 'Memproses via Bot Server...'
+                              : 'Memotong Audio 30 Detik...'
+                            : useBotEndpoint
+                            ? '⚡ Potong via Bot Endpoint'
+                            : '⚡ Potong 30 Detik Ini (yt-dlp)'}
+                        </span>
                       </button>
 
                       {trimFeedback && (

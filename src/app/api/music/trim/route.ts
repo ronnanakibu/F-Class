@@ -18,7 +18,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { videoId, youtubeUrl, startSecond = 0, duration = 30, title, artist } = body;
+    const {
+      videoId,
+      youtubeUrl,
+      startSecond = 0,
+      duration = 30,
+      title,
+      artist,
+      botEndpoint,
+    } = body;
 
     const targetUrl =
       youtubeUrl ||
@@ -31,50 +39,86 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const ytdlpApi = process.env.YTDLP_API_URL || process.env.HF_SPACE_URL;
+    const rawEndpoint =
+      (botEndpoint && typeof botEndpoint === 'string' && botEndpoint.trim()) ||
+      process.env.YTDLP_API_URL ||
+      process.env.HF_SPACE_URL;
 
-    if (!ytdlpApi) {
+    if (!rawEndpoint) {
       return NextResponse.json(
         {
           success: false,
           needsMicroservice: true,
           error:
-            'Microservice yt-dlp belum terhubung. Konfigurasikan YTDLP_API_URL (Hugging Face Space / server bot) untuk memotong 30 detik audio YouTube otomatis di cloud.',
+            'Microservice yt-dlp / Bot endpoint belum terhubung. Silakan masukkan URL bot endpoint kamu atau konfigurasi YTDLP_API_URL untuk memotong 30 detik audio YouTube otomatis.',
         },
         { status: 501 }
       );
     }
 
-    const cleanApi = ytdlpApi.replace(/\/+$/, '');
-    const trimEndpoint = `${cleanApi}/trim?url=${encodeURIComponent(targetUrl)}&start=${encodeURIComponent(
-      startSecond
-    )}&duration=${encodeURIComponent(duration)}`;
+    const cleanApi = rawEndpoint.replace(/\/+$/, '');
 
-    const spaceRes = await fetch(trimEndpoint, {
-      signal: AbortSignal.timeout(45000), // yt-dlp trim can take 5-15s
-    });
+    // Determine candidate endpoints:
+    let candidateUrls: string[] = [];
+    if (cleanApi.includes('/trim')) {
+      const sep = cleanApi.includes('?') ? '&' : '?';
+      candidateUrls = [
+        `${cleanApi}${sep}url=${encodeURIComponent(targetUrl)}&start=${encodeURIComponent(
+          startSecond
+        )}&duration=${encodeURIComponent(duration)}`,
+      ];
+    } else {
+      candidateUrls = [
+        `${cleanApi}/api/yt/trim?url=${encodeURIComponent(targetUrl)}&start=${encodeURIComponent(
+          startSecond
+        )}&duration=${encodeURIComponent(duration)}`,
+        `${cleanApi}/trim?url=${encodeURIComponent(targetUrl)}&start=${encodeURIComponent(
+          startSecond
+        )}&duration=${encodeURIComponent(duration)}`,
+      ];
+    }
 
-    if (!spaceRes.ok) {
-      const errText = await spaceRes.text();
+    let serviceRes: Response | null = null;
+    let lastError = '';
+
+    for (const url of candidateUrls) {
+      try {
+        const res = await fetch(url, {
+          signal: AbortSignal.timeout(60000), // audio trim can take 5-25s
+        });
+        if (res.ok) {
+          serviceRes = res;
+          break;
+        } else if (res.status !== 404) {
+          const errText = await res.text();
+          lastError = errText || res.statusText;
+          break;
+        }
+      } catch (err: any) {
+        lastError = err?.message || 'Connection failed';
+      }
+    }
+
+    if (!serviceRes || !serviceRes.ok) {
       return NextResponse.json(
         {
           success: false,
-          error: `Gagal memproses audio dari Space yt-dlp: ${errText || spaceRes.statusText}`,
+          error: `Gagal memproses audio dari Bot/Microservice endpoint: ${lastError || 'Endpoint tidak merespons'}`,
         },
-        { status: spaceRes.status }
+        { status: 502 }
       );
     }
 
-    const contentType = spaceRes.headers.get('content-type') || '';
+    const contentType = serviceRes.headers.get('content-type') || '';
     let audioUrl = '';
 
-    // If Space returns JSON with direct cloud URL
+    // If Service returns JSON with direct cloud URL
     if (contentType.includes('application/json')) {
-      const spaceData = await spaceRes.json();
-      audioUrl = spaceData.audioUrl || spaceData.url || '';
+      const serviceData = await serviceRes.json();
+      audioUrl = serviceData.audioUrl || serviceData.url || '';
     } else {
-      // If Space returns audio binary (audio/mpeg, audio/mp4, etc.)
-      const arrayBuffer = await spaceRes.arrayBuffer();
+      // If Service returns audio binary (audio/mpeg, audio/mp4, etc.)
+      const arrayBuffer = await serviceRes.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
       const hfToken = process.env.HF_TOKEN || process.env.HUGGINGFACE_TOKEN;
