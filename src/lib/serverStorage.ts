@@ -82,15 +82,15 @@ export async function readStorageFile(
     if (cached && cached.trim() !== '[]') return cached;
   }
 
-  // Priority 3: Local project candidate paths (development & bundled files)
+  // Priority 3: Local project candidate paths (statically scoped to src/data)
   const candidatePaths = [
     path.join(process.cwd(), 'src', 'data', safeFilename),
-    path.join(process.cwd(), relativePath),
+    path.join(/*turbopackIgnore: true*/ process.cwd(), safeFilename),
   ];
 
   for (const p of candidatePaths) {
     try {
-      const fileContent = await fs.readFile(p, 'utf-8');
+      const fileContent = await fs.readFile(/*turbopackIgnore: true*/ p, 'utf-8');
       if (fileContent && fileContent.trim().length > 0 && fileContent.trim() !== '[]') {
         memoryCache.set(cacheKey, fileContent);
         return fileContent;
@@ -174,29 +174,28 @@ export async function writeStorageFile(
     }
   }
 
-  // 4. Try local project disk
-  const projectPath = path.join(/*turbopackIgnore: true*/ process.cwd(), relativePath);
-  try {
-    await fs.writeFile(projectPath, content, 'utf-8');
-    return {
-      success: true,
-      isReadOnlyFs: false,
-      syncedCloud,
-      message: 'Data berhasil disimpan ke disk!',
-    };
-  } catch (err: any) {
-    // Catch EROFS (read-only file system on Vercel / serverless)
-    if (err?.code === 'EROFS' || String(err?.message || '').includes('read-only')) {
-      console.info(`[ServerStorage] Read-only filesystem detected on ${safeFilename}. Successfully persisted to memory & /tmp.`);
+  // 4. Try local project disk (only during local development)
+  if (process.env.NODE_ENV === 'development') {
+    const projectPath = path.join(process.cwd(), 'src', 'data', safeFilename);
+    try {
+      await fs.writeFile(projectPath, content, 'utf-8');
       return {
         success: true,
-        isReadOnlyFs: true,
+        isReadOnlyFs: false,
         syncedCloud,
-        message: syncedCloud
-          ? 'Data berhasil disimpan ke Sesi Server & Cloud Storage!'
-          : 'Data berhasil disimpan di Sesi Server (In-Memory & /tmp). Unduh atau salin berkas JSON jika ingin commit permanen ke Git.',
+        message: 'Data berhasil disimpan ke disk lokal!',
       };
+    } catch {
+      // Continue to cloud return
     }
-    throw err;
   }
+
+  return {
+    success: true,
+    isReadOnlyFs: !syncedCloud,
+    syncedCloud,
+    message: syncedCloud
+      ? 'Data berhasil disimpan langsung ke Hugging Face Cloud!'
+      : 'Data disimpan di sesi server (/tmp).',
+  };
 }
