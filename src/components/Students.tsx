@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { AnimatePresence } from 'framer-motion';
 import { students as staticStudents } from '@/data/students';
 import type { Student } from '@/types';
@@ -125,6 +126,40 @@ export default function Students() {
             </p>
           </div>
         )}
+
+        {/* Question Prompt for Class Members */}
+        <SectionReveal delay={0.2}>
+          <div className="mt-16 relative overflow-hidden rounded-2xl border border-accent/25 bg-gradient-to-br from-surface/90 via-surface/60 to-accent/10 p-6 md:p-8 backdrop-blur-md shadow-xl transition-all duration-300 hover:border-accent/40">
+            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-44 h-44 rounded-full bg-accent/15 blur-3xl pointer-events-none" />
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="space-y-2 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/15 border border-accent/30 text-accent font-mono text-xs font-semibold uppercase tracking-wider">
+                  <span>📋 Presensi Perkuliahan Digital</span>
+                </div>
+                <h3 className="text-xl md:text-2xl font-heading font-bold text-text-primary">
+                  Apakah kamu salah satu dari mereka?
+                </h3>
+                <p className="text-sm md:text-base text-text-secondary leading-relaxed">
+                  Presensi pertemuan kelas kini tercatat secara real-time. Masuk ke portal absensi untuk melakukan presensi kehadiran atau melihat rekap kehadiranmu semester ini.
+                </p>
+                <p className="text-xs font-mono text-text-dim flex items-center gap-1.5 pt-1">
+                  <span className="inline-block w-2 h-2 rounded-full bg-accent/80 animate-pulse" />
+                  <span>Kredensial login: <strong>NIM</strong> & sandi default <strong>4 digit terakhir NIM</strong></span>
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+                <Link
+                  href="/absensi"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-accent text-background font-heading font-bold text-sm hover:bg-accent-hover active:scale-[0.98] transition-all duration-200 shadow-lg shadow-accent/25 group"
+                >
+                  <span>Buka Portal Absensi</span>
+                  <span className="group-hover:translate-x-1 transition-transform duration-200">➔</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </SectionReveal>
       </div>
     </section>
   );

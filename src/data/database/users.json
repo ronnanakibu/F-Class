@@ -1,0 +1,231 @@
+[
+  {
+    "id": "usr-admin-sekretaris",
+    "username": "sekretaris",
+    "name": "Sekretaris Kelas F",
+    "role": "ADMIN",
+    "passwordHash": "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+    "mustChangePassword": false,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112042",
+    "username": "2505112042",
+    "name": "Ahmad Azwar",
+    "nim": "2505112042",
+    "role": "ADMIN",
+    "classRole": "Komting",
+    "passwordHash": "d8ec3903c81cc4f2c290f744a6b591d889b21aa885a469871a7c55d1732200d3",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112012",
+    "username": "2505112012",
+    "name": "Ayu Andita Andre",
+    "nim": "2505112012",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "4b9a7f50c0bb198c6f5414c5a8459f5d216d34ab521ea94c060ea35cac66f900",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112139",
+    "username": "2505112139",
+    "name": "Beauty Louis Fernanda Aritonang",
+    "nim": "2505112139",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "f3c39d0642f4bd32009e7a6bebdfa2be2ae56c3bc16d22dfb9e6e791c316ee37",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112024",
+    "username": "2505112024",
+    "name": "Christian Sembiring",
+    "nim": "2505112024",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "6557739a67283a8de383fc5c0997fbec7c5721a46f28f3235fc9607598d9016b",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112085",
+    "username": "2505112085",
+    "name": "Clara Lisa Oktaviani S",
+    "nim": "2505112085",
+    "role": "STUDENT",
+    "classRole": "Bendahara",
+    "passwordHash": "1e37a1cedc03621762af0b89ebabd2242a5e1597cbe775951c15e59cd5023aaa",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112145",
+    "username": "2505112145",
+    "name": "Dominica br Kacaribu",
+    "nim": "2505112145",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "41332273b0913dad65df2ba070dd6406dacff6636e0eccfa267e8d35a6ba6209",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112006",
+    "username": "2505112006",
+    "name": "Drika Marbun",
+    "nim": "2505112006",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "6f6a4e56098cfd9af29e3ae549503b370211a4e94421457fe4cfd39a38a1fa08",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112115",
+    "username": "2505112115",
+    "name": "Gideon Boloni Siahaan",
+    "nim": "2505112115",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "4459b2909cef1e99ddfb4be233208753a4ed2f43343df6d5b4561c5e9ead51c9",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112157",
+    "username": "2505112157",
+    "name": "Jennifer Kasih Silalahi",
+    "nim": "2505112157",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "3a6e2b22591ed55131de9ee07ffdfd443d86554bfc60c2d23e6620d4e2c794df",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112073",
+    "username": "2505112073",
+    "name": "Johannes K Tambunan",
+    "nim": "2505112073",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "d511b5d469027daccddb924368c9069473495e0da8b42f1a0c4283fd68c770d3",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112127",
+    "username": "2505112127",
+    "name": "Julita Kirana Zega",
+    "nim": "2505112127",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "06ceef9715535b739e13f0eff2d08f2a4d57b537aaa549facff529eaa2af02d0",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112151",
+    "username": "2505112151",
+    "name": "Khairul Rizal",
+    "nim": "2505112151",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "ec2f62c81490e1293397a7997058b2325b2cbf48f88defa2df5f1c0b93fa0e81",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112030",
+    "username": "2505112030",
+    "name": "Khayla Maharani",
+    "nim": "2505112030",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "8e1f192fe25ad49be764c3f55c68beb32f7aa66f85344e026b76cfaaa1d3d88a",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112048",
+    "username": "2505112048",
+    "name": "Lasko Januar Sirait",
+    "nim": "2505112048",
+    "role": "ADMIN",
+    "classRole": "Wakil Komting",
+    "passwordHash": "bfa0ec8bdf2946547879d50a68687ea32e2fa628db187357415858b633d194d9",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112109",
+    "username": "2505112109",
+    "name": "Lorena Reginta Hasibuan",
+    "nim": "2505112109",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "62fb418140a7ee4153da89e8b0f7c453e27db7e034d15502422c21f476cf4fbd",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112066",
+    "username": "2505112066",
+    "name": "Nazwa Hafiza Putri",
+    "nim": "2505112066",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "6b32c01a019bd349ff3c659b6206000b1f29e39bda71e3ac47c0006a033d93cc",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112121",
+    "username": "2505112121",
+    "name": "Nuansa Uli Agustin Sembiring",
+    "nim": "2505112121",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "b8dc2c143be8994682b08461f46487e05874e59dd9ab65cf973e3a3c67a763aa",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112103",
+    "username": "2505112103",
+    "name": "Queenna Rassya Sanana",
+    "nim": "2505112103",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "52ed8fba503e8a9d8e235041ef867cd3cdcd7426125a5e322859c1c3e826c876",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112097",
+    "username": "2505112097",
+    "name": "Rony Imanuel Sihombing",
+    "nim": "2505112097",
+    "role": "ADMIN",
+    "classRole": "Sekretaris",
+    "passwordHash": "642c2a0918053df94003e4ea155e30e8bb2aa21b3de45c4797dc146a3fa7ec12",
+    "mustChangePassword": true,
+    "isActive": true
+  },
+  {
+    "id": "usr-2505112054",
+    "username": "2505112054",
+    "name": "Siti Aulia Sinulingga",
+    "nim": "2505112054",
+    "role": "STUDENT",
+    "classRole": "Anggota",
+    "passwordHash": "793de180d506f6cf4f63933deae077478547c31145ade55de72f98cb6d8cc282",
+    "mustChangePassword": true,
+    "isActive": true
+  }
+]

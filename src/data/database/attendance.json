@@ -1,0 +1,202 @@
+[
+  {
+    "id": "att-1789218249555-2505112042",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112042",
+    "studentName": "Ahmad Azwar",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:04:09.555Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218281251-2505112012",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112012",
+    "studentName": "Ayu Andita Andre",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:04:41.251Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218283419-2505112139",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112139",
+    "studentName": "Beauty Louis Fernanda Aritonang",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:04:43.419Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218285928-2505112024",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112024",
+    "studentName": "Christian Sembiring",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:04:45.928Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218316604-2505112085",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112085",
+    "studentName": "Clara Lisa Oktaviani S",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:05:16.604Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218319068-2505112145",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112145",
+    "studentName": "Dominica br Kacaribu",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:05:19.068Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218321481-2505112006",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112006",
+    "studentName": "Drika Marbun",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:05:21.481Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218334860-2505112115",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112115",
+    "studentName": "Gideon Boloni Siahaan",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:05:34.860Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218337693-2505112157",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112157",
+    "studentName": "Jennifer Kasih Silalahi",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:05:37.693Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218340269-2505112073",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112073",
+    "studentName": "Johannes K Tambunan",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:05:40.269Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218343496-2505112127",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112127",
+    "studentName": "Julita Kirana Zega",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:05:43.496Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218353911-2505112151",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112151",
+    "studentName": "Khairul Rizal",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:05:53.911Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218356229-2505112030",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112030",
+    "studentName": "Khayla Maharani",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:05:56.229Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218359584-2505112048",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112048",
+    "studentName": "Lasko Januar Sirait",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:05:59.584Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218362776-2505112109",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112109",
+    "studentName": "Lorena Reginta Hasibuan",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:06:02.776Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218365311-2505112066",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112066",
+    "studentName": "Nazwa Hafiza Putri",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:06:05.311Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218380782-2505112121",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112121",
+    "studentName": "Nuansa Uli Agustin Sembiring",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:06:20.782Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218383477-2505112103",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112103",
+    "studentName": "Queenna Rassya Sanana",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:09:05.366Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218386139-2505112097",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112097",
+    "studentName": "Rony Imanuel Sihombing",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:06:26.139Z",
+    "verifiedByAdmin": true
+  },
+  {
+    "id": "att-1789218388301-2505112054",
+    "meetingId": "mtg-1789218151126",
+    "studentNim": "2505112054",
+    "studentName": "Siti Aulia Sinulingga",
+    "status": "HADIR",
+    "notes": "",
+    "timestamp": "2026-09-12T13:06:28.301Z",
+    "verifiedByAdmin": true
+  }
+]

@@ -26,8 +26,9 @@ export async function readStorageFile(
   relativePath: string,
   defaultContent: string = '[]'
 ): Promise<string> {
-  const safeFilename = path.basename(relativePath);
-  const cacheKey = relativePath.replace(/\\/g, '/');
+  const normalizedPath = relativePath.replace(/\\/g, '/').replace(/^\/+/, '');
+  const safeFilename = path.basename(normalizedPath);
+  const cacheKey = normalizedPath;
 
   // Priority 1: DIRECT TO HUGGING FACE CLOUD DATASET (Primary Source)
   const hfToken = process.env.HF_TOKEN || process.env.HUGGINGFACE_TOKEN;
@@ -35,7 +36,7 @@ export async function readStorageFile(
 
   if (hfRepo) {
     try {
-      const hfUrl = `https://huggingface.co/datasets/${hfRepo}/raw/main/${safeFilename}`;
+      const hfUrl = `https://huggingface.co/datasets/${hfRepo}/raw/main/${normalizedPath}`;
       const res = await fetch(hfUrl, {
         headers: hfToken ? { Authorization: `Bearer ${hfToken}` } : {},
         cache: 'no-store',
@@ -60,11 +61,11 @@ export async function readStorageFile(
             repo: { type: 'dataset', name: hfRepo },
             credentials: { accessToken: hfToken },
             file: {
-              path: safeFilename,
+              path: normalizedPath,
               content: new Blob([defaultContent]),
             },
           });
-          console.info(`[ServerStorage] Initialized and seeded ${safeFilename} to Hugging Face Dataset!`);
+          console.info(`[ServerStorage] Initialized and seeded ${normalizedPath} to Hugging Face Dataset!`);
         } catch (e) {
           console.warn('[ServerStorage] Auto-seed warning:', e);
         }
@@ -84,6 +85,7 @@ export async function readStorageFile(
 
   // Priority 3: Local project candidate paths (statically scoped to src/data)
   const candidatePaths = [
+    path.join(process.cwd(), 'src', 'data', normalizedPath),
     path.join(process.cwd(), 'src', 'data', safeFilename),
     path.join(/*turbopackIgnore: true*/ process.cwd(), safeFilename),
   ];
@@ -101,7 +103,7 @@ export async function readStorageFile(
   }
 
   // Priority 4: /tmp ephemeral disk (serverless fallback)
-  const tmpPath = path.join('/tmp', safeFilename);
+  const tmpPath = path.join('/tmp', normalizedPath.replace(/\//g, '__'));
   try {
     const tmpContent = await fs.readFile(tmpPath, 'utf-8');
     if (tmpContent && tmpContent.trim().length > 0 && tmpContent.trim() !== '[]') {
@@ -137,18 +139,19 @@ export async function writeStorageFile(
   relativePath: string,
   content: string
 ): Promise<WriteResult> {
-  const cacheKey = relativePath.replace(/\\/g, '/');
+  const normalizedPath = relativePath.replace(/\\/g, '/').replace(/^\/+/, '');
+  const safeFilename = path.basename(normalizedPath);
+  const cacheKey = normalizedPath;
   
   // 1. In-memory update
   memoryCache.set(cacheKey, content);
 
   // 2. Write to /tmp (safe on Vercel and Linux serverless)
-  const safeFilename = path.basename(relativePath);
-  const tmpPath = path.join('/tmp', safeFilename);
+  const tmpPath = path.join('/tmp', normalizedPath.replace(/\//g, '__'));
   try {
     await fs.writeFile(tmpPath, content, 'utf-8');
   } catch (err) {
-    console.warn(`[ServerStorage] /tmp write warning for ${safeFilename}:`, err);
+    console.warn(`[ServerStorage] /tmp write warning for ${normalizedPath}:`, err);
   }
 
   // 3. Optional Cloud Sync: Hugging Face Dataset
@@ -163,12 +166,12 @@ export async function writeStorageFile(
         repo: { type: 'dataset', name: hfRepo },
         credentials: { accessToken: hfToken },
         file: {
-          path: safeFilename,
+          path: normalizedPath,
           content: new Blob([content]),
         },
       });
       syncedCloud = true;
-      console.info(`[ServerStorage] Successfully synced ${safeFilename} to Hugging Face Dataset: ${hfRepo}`);
+      console.info(`[ServerStorage] Successfully synced ${normalizedPath} to Hugging Face Dataset: ${hfRepo}`);
     } catch (e) {
       console.warn('[ServerStorage] Hugging Face sync warning:', e);
     }
@@ -176,8 +179,10 @@ export async function writeStorageFile(
 
   // 4. Try local project disk (only during local development)
   if (process.env.NODE_ENV === 'development') {
-    const projectPath = path.join(process.cwd(), 'src', 'data', safeFilename);
+    const localDir = path.join(process.cwd(), 'src', 'data', path.dirname(normalizedPath));
+    const projectPath = path.join(localDir, safeFilename);
     try {
+      await fs.mkdir(localDir, { recursive: true });
       await fs.writeFile(projectPath, content, 'utf-8');
       return {
         success: true,
