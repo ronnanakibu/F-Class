@@ -4762,10 +4762,12 @@ export default function AdminPage() {
                     if (parts.length === 2) return parts[0] * 60 + parts[1];
                     return 0;
                   };
-                  const trackDurationSec =
-                    (selectedYtTrack.durationSeconds && selectedYtTrack.durationSeconds > 0
-                      ? selectedYtTrack.durationSeconds
-                      : parseDurText(selectedYtTrack.durationText));
+                  // Always prefer raw durationText parse — durationSeconds from API
+                  // can be 180 (fallback) even when actual track is 6+ minutes.
+                  const fromText = parseDurText(selectedYtTrack.durationText);
+                  const trackDurationSec = fromText > 0
+                    ? fromText
+                    : (selectedYtTrack.durationSeconds > 0 ? selectedYtTrack.durationSeconds : 0);
                   const sliderMax = trackDurationSec > 30 ? trackDurationSec - 30 : 30;
 
                   return (
