@@ -4765,8 +4765,8 @@ export default function AdminPage() {
                   const trackDurationSec =
                     (selectedYtTrack.durationSeconds && selectedYtTrack.durationSeconds > 0
                       ? selectedYtTrack.durationSeconds
-                      : parseDurText(selectedYtTrack.durationText)) || 420;
-                  const sliderMax = Math.max(30, trackDurationSec - 30);
+                      : parseDurText(selectedYtTrack.durationText));
+                  const sliderMax = trackDurationSec > 30 ? trackDurationSec - 30 : 30;
 
                   return (
                   <div className="p-3.5 rounded-xl border border-red-500/40 bg-red-500/10 space-y-3">
