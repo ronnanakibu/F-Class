@@ -84,6 +84,7 @@ export default function Gallery() {
   const [isMuted, setIsMuted] = useState(true);
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
   const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number }[]>([]);
+  const [showAll, setShowAll] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
@@ -108,11 +109,18 @@ export default function Gallery() {
 
   // Filtered stories based on active category
   const filtered = useMemo(() => {
-    if (activeCategory === 'All') return stories;
-    return stories.filter(
-      (s) => (s.category || 'General').toLowerCase() === activeCategory.toLowerCase()
-    );
+    let result = stories;
+    if (activeCategory !== 'All') {
+      result = stories.filter(
+        (s) => (s.category || 'General').toLowerCase() === activeCategory.toLowerCase()
+      );
+    }
+    return result;
   }, [activeCategory, stories]);
+
+  const displayedStories = useMemo(() => {
+    return showAll ? filtered : filtered.slice(0, 8);
+  }, [filtered, showAll]);
 
   // Story Viewer Handlers
   const activeStory: IGStory | null =
@@ -358,7 +366,7 @@ export default function Gallery() {
         </SectionReveal>
 
         {/* The Vault Masonry Grid (Archived Instagram Stories) */}
-        {filtered.length === 0 ? (
+        {displayedStories.length === 0 ? (
           <div className="text-center py-16 rounded-3xl border border-dashed border-border bg-bg-elevated/20">
             <Tag size={32} className="text-text-dim mx-auto mb-3" />
             <h3 className="text-base font-heading font-semibold text-text-primary">
@@ -371,7 +379,7 @@ export default function Gallery() {
         ) : (
           <div className="masonry">
             <AnimatePresence mode="popLayout">
-              {filtered.map((story, i) => {
+              {displayedStories.map((story, i) => {
                 const globalIndex = stories.findIndex((s) => s.id === story.id);
                 const catCfg =
                   categoryBadgeConfig[(story.category || 'general').toLowerCase()] ||
@@ -492,6 +500,20 @@ export default function Gallery() {
               })}
             </AnimatePresence>
           </div>
+        )}
+
+        {/* Load More Button */}
+        {filtered.length > 8 && (
+          <SectionReveal>
+            <div className="mt-12 flex justify-center">
+              <button
+                onClick={() => setShowAll(!showAll)}
+                className="px-6 py-3 rounded-full bg-bg-elevated/40 border border-border text-text-primary hover:border-accent hover:text-accent transition-all duration-300 font-medium text-sm flex items-center gap-2"
+              >
+                {showAll ? 'Sembunyikan Sebagian' : `Lihat Semua (${filtered.length})`}
+              </button>
+            </div>
+          </SectionReveal>
         )}
       </div>
 
