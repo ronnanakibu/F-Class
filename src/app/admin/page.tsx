@@ -215,6 +215,7 @@ export default function AdminPage() {
   const [storyPreview, setStoryPreview] = useState<string | null>(null);
   const [storyCaption, setStoryCaption] = useState('');
   const [storyDate, setStoryDate] = useState('');
+  const [storyCategory, setStoryCategory] = useState('General');
   const [isUploadingStory, setIsUploadingStory] = useState(false);
   const [storyDragOver, setStoryDragOver] = useState(false);
   const storyFileInputRef = useRef<HTMLInputElement>(null);
@@ -518,6 +519,7 @@ export default function AdminPage() {
       formData.append('apiKey', key);
       if (storyCaption.trim()) formData.append('caption', storyCaption.trim());
       if (storyDate) formData.append('timestamp', storyDate);
+      if (storyCategory.trim()) formData.append('category', storyCategory.trim());
 
       const res = await fetch('/api/stories', {
         method: 'POST',
@@ -532,6 +534,7 @@ export default function AdminPage() {
         setStoryPreview(null);
         setStoryCaption('');
         setStoryDate('');
+        setStoryCategory('General');
         await loadStories();
       } else {
         showToast(data.error || 'Gagal mengunggah story', 'error');
@@ -3158,6 +3161,7 @@ export default function AdminPage() {
                     setStoryPreview(null);
                     setStoryCaption('');
                     setStoryDate('');
+                    setStoryCategory('General');
                     setIsStoryModalOpen(true);
                   }}
                   className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:opacity-90 text-white text-xs font-heading font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-lg shadow-rose-500/20"
@@ -4105,6 +4109,25 @@ export default function AdminPage() {
                     placeholder="Tulis caption story..."
                     className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs text-text-primary focus:outline-none focus:border-accent resize-none"
                   />
+                </div>
+
+                {/* Category Selection */}
+                <div>
+                  <label className="block text-[11px] font-mono text-text-dim uppercase mb-1">
+                    Kategori Story
+                  </label>
+                  <select
+                    value={storyCategory}
+                    onChange={(e) => setStoryCategory(e.target.value)}
+                    className="w-full px-3 py-2 bg-bg-surface border border-border rounded-xl text-xs font-mono text-text-primary focus:outline-none focus:border-accent"
+                  >
+                    <option value="General">General</option>
+                    <option value="Praktikum">Praktikum</option>
+                    <option value="Kantin & Chill">Kantin & Chill</option>
+                    <option value="Project IoT">Project IoT</option>
+                    <option value="Event">Event</option>
+                    <option value="Chaos">Chaos</option>
+                  </select>
                 </div>
 
                 {/* Custom Date (Opsional) */}

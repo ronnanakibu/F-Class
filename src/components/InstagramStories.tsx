@@ -22,6 +22,7 @@ const STORY_DURATION = 5000; // 5 seconds per story
 
 export default function InstagramStories() {
   const [stories, setStories] = useState<IGStory[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string>('Semua Story');
   const [loading, setLoading] = useState(true);
   const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
   const [progress, setProgress] = useState(0);
@@ -53,14 +54,16 @@ export default function InstagramStories() {
     fetchStories();
   }, [fetchStories]);
 
+  const displayStories = stories.filter(s => activeCategory === 'Semua Story' || (s.category && s.category === activeCategory)).slice(0, 50);
+
   const activeStory: IGStory | null =
-    activeStoryIndex !== null && stories[activeStoryIndex]
-      ? stories[activeStoryIndex]
+    activeStoryIndex !== null && displayStories[activeStoryIndex]
+      ? displayStories[activeStoryIndex]
       : null;
 
   const handleNextStory = useCallback(() => {
     if (activeStoryIndex === null) return;
-    if (activeStoryIndex < stories.length - 1) {
+    if (activeStoryIndex < displayStories.length - 1) {
       setActiveStoryIndex(activeStoryIndex + 1);
       setProgress(0);
       elapsedRef.current = 0;
@@ -71,7 +74,7 @@ export default function InstagramStories() {
       setProgress(0);
       elapsedRef.current = 0;
     }
-  }, [activeStoryIndex, stories.length]);
+  }, [activeStoryIndex, displayStories.length]);
 
   const handlePrevStory = useCallback(() => {
     if (activeStoryIndex === null) return;
@@ -105,7 +108,7 @@ export default function InstagramStories() {
       if (elapsed >= STORY_DURATION) {
         handleNextStory();
       }
-    }, 40);
+    }, 100);
 
     timerRef.current = interval;
 
@@ -173,12 +176,14 @@ export default function InstagramStories() {
     }
   };
 
-  // Pre-defined highlights
+  // Dynamic highlights
   const highlights = [
     { title: 'Semua Story', icon: '📸', count: stories.length },
-    { title: 'Praktikum', icon: '⚡', count: 'Lab' },
-    { title: 'Kantin & Chill', icon: '☕', count: 'Vibes' },
-    { title: 'Project IoT', icon: '🚀', count: 'Build' },
+    ...Array.from(new Set(stories.map(s => s.category || 'General'))).filter(c => c !== 'Semua Story').map(c => ({
+      title: c,
+      icon: c === 'Praktikum' ? '⚡' : c === 'Kantin & Chill' ? '☕' : c === 'Project IoT' ? '🚀' : c === 'Event' ? '🎉' : c === 'Chaos' ? '🔥' : '⭐',
+      count: stories.filter(s => (s.category || 'General') === c).length
+    }))
   ];
 
   return (
@@ -214,7 +219,10 @@ export default function InstagramStories() {
         <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-4 pt-2 no-scrollbar">
           {/* Main Account Ring (@comeinone.f) */}
           <button
-            onClick={() => openStoryAt(0)}
+            onClick={() => {
+              setActiveCategory('Semua Story');
+              openStoryAt(0);
+            }}
             className="flex flex-col items-center gap-2 group shrink-0 cursor-pointer text-center"
             aria-label="Lihat Story Terbaru"
           >
@@ -248,8 +256,11 @@ export default function InstagramStories() {
           {highlights.map((hl, i) => (
             <button
               key={i}
-              onClick={() => openStoryAt(Math.min(i, stories.length - 1))}
-              className="flex flex-col items-center gap-2 group shrink-0 cursor-pointer text-center"
+              onClick={() => {
+                setActiveCategory(hl.title);
+                openStoryAt(0);
+              }}
+              className={`flex flex-col items-center gap-2 group shrink-0 cursor-pointer text-center ${activeCategory === hl.title ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
             >
               <div className="p-0.5 rounded-full bg-border hover:border-text-dim border transition-all duration-200 group-hover:scale-105">
                 <div className="p-0.5 bg-bg-primary rounded-full">
@@ -389,7 +400,7 @@ export default function InstagramStories() {
               >
                 {/* Segmented Bars */}
                 <div className="flex items-center gap-1.5 mb-3">
-                  {stories.map((s, idx) => {
+                  {displayStories.map((s, idx) => {
                     const isCurrent = idx === activeStoryIndex;
                     const isPassed = idx < activeStoryIndex;
 
