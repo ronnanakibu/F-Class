@@ -132,6 +132,7 @@ export async function POST(req: NextRequest) {
       const buffer = Buffer.from(arrayBuffer);
 
       let mediaUrl = `/stories/${filename}`;
+      let thumbnailUrl: string | undefined;
       const hfToken = process.env.HF_TOKEN || process.env.HUGGINGFACE_TOKEN;
       const hfRepo = process.env.HF_DATASET_REPO;
 
@@ -151,7 +152,6 @@ export async function POST(req: NextRequest) {
           
           // Handle thumbnail if provided
           const thumbnailFile = formData.get('thumbnail') as File | null;
-          let thumbnailUrl;
           
           if (thumbnailFile) {
             const thumbBuffer = Buffer.from(await thumbnailFile.arrayBuffer());
