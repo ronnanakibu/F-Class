@@ -114,7 +114,20 @@ export async function POST(req: NextRequest) {
         file.type.startsWith('video/') ||
         ['.mp4', '.webm', '.mov', '.m4v'].includes(originalExt);
 
-      const filename = `story-${timestampMs}${originalExt}`;
+      const stories = await getStories();
+      let maxId = 0;
+      for (const s of stories) {
+        const parts = s.id.split('-');
+        if (parts.length === 2) {
+          const num = parseInt(parts[1], 10);
+          if (!isNaN(num) && num < 1000000000000 && num > maxId) {
+            maxId = num;
+          }
+        }
+      }
+      const nextId = maxId + 1;
+      const filename = `story-${nextId}${originalExt}`;
+      const storyId = `story-${nextId}`;
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
@@ -135,6 +148,27 @@ export async function POST(req: NextRequest) {
             },
           });
           mediaUrl = `https://huggingface.co/datasets/${hfRepo}/resolve/main/${hfPath}`;
+          
+          // Handle thumbnail if provided
+          const thumbnailFile = formData.get('thumbnail') as File | null;
+          let thumbnailUrl;
+          
+          if (thumbnailFile) {
+            const thumbBuffer = Buffer.from(await thumbnailFile.arrayBuffer());
+            const thumbExt = path.extname(thumbnailFile.name).toLowerCase() || '.jpg';
+            const thumbFilename = `story-${nextId}${thumbExt}`;
+            const thumbPath = `stories/thumbnails/${thumbFilename}`;
+            
+            await uploadFile({
+              repo: { type: 'dataset', name: hfRepo },
+              credentials: { accessToken: hfToken },
+              file: {
+                path: thumbPath,
+                content: new Blob([thumbBuffer]),
+              },
+            });
+            thumbnailUrl = `https://huggingface.co/datasets/${hfRepo}/resolve/main/${thumbPath}`;
+          }
         } catch (hfErr) {
           console.warn('[StoriesAPI] HF upload error, falling back to local/data url:', hfErr);
         }
@@ -145,14 +179,24 @@ export async function POST(req: NextRequest) {
         try {
           await fs.mkdir(STORIES_DIR, { recursive: true });
           await fs.writeFile(path.join(STORIES_DIR, filename), buffer);
+          
+          const thumbnailFile = formData.get('thumbnail') as File | null;
+          if (thumbnailFile) {
+            const thumbDir = path.join(STORIES_DIR, 'thumbnails');
+            await fs.mkdir(thumbDir, { recursive: true });
+            const thumbExt = path.extname(thumbnailFile.name).toLowerCase() || '.jpg';
+            const thumbBuffer = Buffer.from(await thumbnailFile.arrayBuffer());
+            await fs.writeFile(path.join(thumbDir, `story-${nextId}${thumbExt}`), thumbBuffer);
+          }
         } catch {
           // ignore in read-only environment
         }
       }
 
       const newStory: IGStory = {
-        id: `story-${timestampMs}`,
+        id: storyId,
         mediaUrl,
+        ...(typeof thumbnailUrl !== 'undefined' ? { thumbnailUrl } : {}),
         mediaType: isVideo ? 'video' : 'image',
         caption: rawCaption ? rawCaption.trim() : '',
         timestamp: finalTimestamp,
@@ -163,7 +207,6 @@ export async function POST(req: NextRequest) {
         likes: Math.floor(Math.random() * 20) + 15,
       };
 
-      const stories = await getStories();
       const updated = [newStory, ...stories];
       const writeResult = await saveStories(updated);
 

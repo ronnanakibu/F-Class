@@ -403,6 +403,7 @@ export default function Gallery() {
                       {story.mediaType === 'video' ? (
                         <video
                           src={story.mediaUrl}
+                          poster={story.thumbnailUrl}
                           muted
                           loop
                           autoPlay
@@ -569,6 +570,7 @@ export default function Gallery() {
                 {activeStory.mediaType === 'video' ? (
                   <video
                     src={activeStory.mediaUrl}
+                    poster={activeStory.thumbnailUrl}
                     autoPlay
                     loop
                     muted={isMuted}
@@ -585,9 +587,14 @@ export default function Gallery() {
                     }}
                   />
                 )}
-
-                {/* Fallback Graphic */}
-                <div className="absolute inset-0 bg-gradient-to-b from-purple-950/70 via-black/80 to-rose-950/70 flex flex-col items-center justify-center p-8 text-center -z-0">
+                {/* Fallback Graphic / Overlay (Animates out after 2s) */}
+                <motion.div
+                  key={activeStory.id}
+                  initial={{ opacity: 1 }}
+                  animate={{ opacity: 0 }}
+                  transition={{ delay: 2, duration: 0.8 }}
+                  className="absolute inset-0 bg-gradient-to-b from-purple-950/70 via-black/80 to-rose-950/70 flex flex-col items-center justify-center p-8 text-center z-10 pointer-events-none"
+                >
                   <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-400 via-rose-500 to-purple-600 flex items-center justify-center mb-4 shadow-xl">
                     <Sparkles size={28} className="text-white" />
                   </div>
@@ -602,7 +609,7 @@ export default function Gallery() {
                       &ldquo;{activeStory.caption}&rdquo;
                     </p>
                   )}
-                </div>
+                </motion.div>
               </div>
 
               {/* Gradient Vignettes */}

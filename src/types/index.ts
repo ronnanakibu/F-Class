@@ -86,6 +86,7 @@ export interface SlideItem {
 export interface IGStory {
   id: string;
   mediaUrl: string;
+  thumbnailUrl?: string;
   mediaType: 'image' | 'video';
   caption?: string;
   timestamp: string;
