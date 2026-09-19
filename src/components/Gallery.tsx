@@ -85,6 +85,7 @@ export default function Gallery() {
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
   const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number }[]>([]);
   const [showAll, setShowAll] = useState(false);
+  const [currentDuration, setCurrentDuration] = useState(STORY_DURATION);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
@@ -130,6 +131,7 @@ export default function Gallery() {
 
   const handleNextStory = useCallback(() => {
     if (activeStoryIndex === null) return;
+    setCurrentDuration(STORY_DURATION);
     if (activeStoryIndex < stories.length - 1) {
       setActiveStoryIndex(activeStoryIndex + 1);
       setProgress(0);
@@ -144,6 +146,7 @@ export default function Gallery() {
 
   const handlePrevStory = useCallback(() => {
     if (activeStoryIndex === null) return;
+    setCurrentDuration(STORY_DURATION);
     if (activeStoryIndex > 0) {
       setActiveStoryIndex(activeStoryIndex - 1);
       setProgress(0);
@@ -167,10 +170,10 @@ export default function Gallery() {
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTimeRef.current;
-      const pct = Math.min((elapsed / STORY_DURATION) * 100, 100);
+      const pct = Math.min((elapsed / currentDuration) * 100, 100);
       setProgress(pct);
 
-      if (elapsed >= STORY_DURATION) {
+      if (elapsed >= currentDuration) {
         handleNextStory();
       }
     }, 40);
@@ -178,12 +181,12 @@ export default function Gallery() {
     timerRef.current = interval;
 
     return () => clearInterval(interval);
-  }, [activeStoryIndex, isPaused, handleNextStory]);
+  }, [activeStoryIndex, isPaused, handleNextStory, currentDuration]);
 
   // Hold to pause gesture
   const handleHoldStart = () => {
     setIsPaused(true);
-    elapsedRef.current = (progress / 100) * STORY_DURATION;
+    elapsedRef.current = (progress / 100) * currentDuration;
   };
 
   const handleHoldEnd = () => {
@@ -204,6 +207,7 @@ export default function Gallery() {
   }, [activeStoryIndex, handleNextStory, handlePrevStory]);
 
   const openStoryAt = (idx: number) => {
+    setCurrentDuration(STORY_DURATION);
     setActiveStoryIndex(idx);
     setProgress(0);
     elapsedRef.current = 0;
@@ -572,10 +576,15 @@ export default function Gallery() {
                     src={activeStory.mediaUrl}
                     poster={activeStory.thumbnailUrl}
                     autoPlay
-                    loop
+                    loop={false}
                     muted={isMuted}
                     playsInline
                     className="w-full h-full object-cover"
+                    onLoadedMetadata={(e) => {
+                      if (e.currentTarget.duration && e.currentTarget.duration !== Infinity) {
+                        setCurrentDuration(e.currentTarget.duration * 1000);
+                      }
+                    }}
                   />
                 ) : (
                   <img
