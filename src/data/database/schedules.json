@@ -1,35 +1,292 @@
 [
-  { "id": "sch-01", "dayOfWeek": 1, "dayName": "Senin", "order": 1, "courseName": "Praktik Pemrograman C#", "teacherName": "Kadri Yusuf, S.T., M. Kom.", "startTime": "07:30", "endTime": "08:20" },
-  { "id": "sch-02", "dayOfWeek": 1, "dayName": "Senin", "order": 2, "courseName": "Praktik Pemrograman C#", "teacherName": "Kadri Yusuf, S.T., M. Kom.", "startTime": "08:20", "endTime": "09:10" },
-  { "id": "sch-03", "dayOfWeek": 1, "dayName": "Senin", "order": 3, "courseName": "Jaringan Komputer", "teacherName": "Marliana sari, S.T., MMSI.", "startTime": "09:10", "endTime": "10:00" },
-  { "id": "sch-04", "dayOfWeek": 1, "dayName": "Senin", "order": 4, "courseName": "Jaringan Komputer", "teacherName": "Marliana sari, S.T., MMSI.", "startTime": "10:15", "endTime": "11:05" },
-  { "id": "sch-05", "dayOfWeek": 1, "dayName": "Senin", "order": 5, "courseName": "Pancasila", "teacherName": "Fauzan Ghafur, SH., MH.", "startTime": "11:05", "endTime": "11:55" },
-  { "id": "sch-06", "dayOfWeek": 1, "dayName": "Senin", "order": 6, "courseName": "Pancasila", "teacherName": "Fauzan Ghafur, SH., MH.", "startTime": "11:55", "endTime": "12:45" },
-
-  { "id": "sch-07", "dayOfWeek": 2, "dayName": "Selasa", "order": 1, "courseName": "Praktik Perancangan Perangkat Lunak", "teacherName": "Wiwin Sry Adinda Banjarnahor, S.Kom., M.Sc", "startTime": "07:30", "endTime": "08:20" },
-  { "id": "sch-08", "dayOfWeek": 2, "dayName": "Selasa", "order": 2, "courseName": "Praktik Perancangan Perangkat Lunak", "teacherName": "Wiwin Sry Adinda Banjarnahor, S.Kom., M.Sc", "startTime": "08:20", "endTime": "09:10" },
-  { "id": "sch-09", "dayOfWeek": 2, "dayName": "Selasa", "order": 3, "courseName": "Matematika", "teacherName": "Yunita Sari Siregar, S.T., M.Kom", "startTime": "09:10", "endTime": "10:00" },
-  { "id": "sch-10", "dayOfWeek": 2, "dayName": "Selasa", "order": 4, "courseName": "Matematika", "teacherName": "Yunita Sari Siregar, S.T., M.Kom", "startTime": "10:15", "endTime": "11:05" },
-  { "id": "sch-11", "dayOfWeek": 2, "dayName": "Selasa", "order": 5, "courseName": "Kewirausahaan", "teacherName": "Syarifah fadillah natasha", "startTime": "11:05", "endTime": "11:55" },
-  { "id": "sch-12", "dayOfWeek": 2, "dayName": "Selasa", "order": 6, "courseName": "Kewirausahaan", "teacherName": "Syarifah fadillah natasha", "startTime": "11:55", "endTime": "12:45" },
-
-  { "id": "sch-13", "dayOfWeek": 3, "dayName": "Rabu", "order": 1, "courseName": "Praktik Pengujian Perangkat Lunak", "teacherName": "Wiwin Sry Adinda Banjarnahor, S.Kom., M.Sc", "startTime": "07:30", "endTime": "08:20" },
-  { "id": "sch-14", "dayOfWeek": 3, "dayName": "Rabu", "order": 2, "courseName": "Praktik Pengujian Perangkat Lunak", "teacherName": "Wiwin Sry Adinda Banjarnahor, S.Kom., M.Sc", "startTime": "08:20", "endTime": "09:10" },
-  { "id": "sch-15", "dayOfWeek": 3, "dayName": "Rabu", "order": 3, "courseName": "Elektronika", "teacherName": "Muhammad Riki Atsauri, S.T., M.Kom", "startTime": "09:10", "endTime": "10:00" },
-  { "id": "sch-16", "dayOfWeek": 3, "dayName": "Rabu", "order": 4, "courseName": "Elektronika", "teacherName": "Muhammad Riki Atsauri, S.T., M.Kom", "startTime": "10:15", "endTime": "11:05" },
-  { "id": "sch-17", "dayOfWeek": 3, "dayName": "Rabu", "order": 5, "courseName": "Praktik Elektronika", "teacherName": "Muhammad Riki Atsauri, S.T., M.Kom", "startTime": "11:05", "endTime": "11:55" },
-  { "id": "sch-18", "dayOfWeek": 3, "dayName": "Rabu", "order": 6, "courseName": "Praktik Elektronika", "teacherName": "Muhammad Riki Atsauri, S.T., M.Kom", "startTime": "11:55", "endTime": "12:45" },
-
-  { "id": "sch-19", "dayOfWeek": 4, "dayName": "Kamis", "order": 1, "courseName": "Praktikum Jaringan Komputer", "teacherName": "Marliana sari, S.T., MMSI.", "startTime": "07:30", "endTime": "08:20" },
-  { "id": "sch-20", "dayOfWeek": 4, "dayName": "Kamis", "order": 2, "courseName": "Praktikum Jaringan Komputer", "teacherName": "Marliana sari, S.T., MMSI.", "startTime": "08:20", "endTime": "09:10" },
-  { "id": "sch-21", "dayOfWeek": 4, "dayName": "Kamis", "order": 3, "courseName": "Praktik Pemrograman C#", "teacherName": "Kadri Yusuf, S.T., M. Kom.", "startTime": "09:10", "endTime": "10:00" },
-  { "id": "sch-22", "dayOfWeek": 4, "dayName": "Kamis", "order": 4, "courseName": "Praktik Pemrograman C#", "teacherName": "Kadri Yusuf, S.T., M. Kom.", "startTime": "10:15", "endTime": "11:05" },
-  { "id": "sch-23", "dayOfWeek": 4, "dayName": "Kamis", "order": 5, "courseName": "Jaringan Komputer", "teacherName": "Marliana sari, S.T., MMSI.", "startTime": "11:05", "endTime": "11:55" },
-  { "id": "sch-24", "dayOfWeek": 4, "dayName": "Kamis", "order": 6, "courseName": "Jaringan Komputer", "teacherName": "Marliana sari, S.T., MMSI.", "startTime": "11:55", "endTime": "12:45" },
-
-  { "id": "sch-25", "dayOfWeek": 5, "dayName": "Jumat", "order": 1, "courseName": "Pancasila", "teacherName": "Fauzan Ghafur, SH., MH.", "startTime": "07:30", "endTime": "08:20" },
-  { "id": "sch-26", "dayOfWeek": 5, "dayName": "Jumat", "order": 2, "courseName": "Matematika", "teacherName": "Yunita Sari Siregar, S.T., M.Kom", "startTime": "08:20", "endTime": "09:10" },
-  { "id": "sch-27", "dayOfWeek": 5, "dayName": "Jumat", "order": 3, "courseName": "Kewirausahaan", "teacherName": "Syarifah fadillah natasha", "startTime": "09:10", "endTime": "10:00" },
-  { "id": "sch-28", "dayOfWeek": 5, "dayName": "Jumat", "order": 4, "courseName": "Elektronika", "teacherName": "Muhammad Riki Atsauri, S.T., M.Kom", "startTime": "10:15", "endTime": "11:05" },
-  { "id": "sch-29", "dayOfWeek": 5, "dayName": "Jumat", "order": 5, "courseName": "Praktikum Jaringan Komputer", "teacherName": "Marliana sari, S.T., MMSI.", "startTime": "11:05", "endTime": "11:55" }
+  {
+    "id": "9ba8925d-2605-4c21-adc6-606c35b0b945",
+    "dayOfWeek": 1,
+    "order": 1,
+    "courseName": "Praktik Pemrograman C#",
+    "teacherName": "Kadri Yusuf, S.T., M. Kom.",
+    "startTime": "07:30",
+    "endTime": "08:20",
+    "dayName": "Senin"
+  },
+  {
+    "id": "395ee085-b286-47f5-9221-d163bd4c13cf",
+    "dayOfWeek": 1,
+    "order": 2,
+    "courseName": "Praktik Pemrograman C#",
+    "teacherName": "Kadri Yusuf, S.T., M. Kom.",
+    "startTime": "08:20",
+    "endTime": "09:10",
+    "dayName": "Senin"
+  },
+  {
+    "id": "672940ac-9740-4ef3-9f07-e274a57d9197",
+    "dayOfWeek": 1,
+    "order": 3,
+    "courseName": "Jaringan Komputer",
+    "teacherName": "Marliana sari, S.T., MMSI.",
+    "startTime": "09:10",
+    "endTime": "10:00",
+    "dayName": "Senin"
+  },
+  {
+    "id": "6e8a4b08-0299-4aa8-a909-b59cdf30b4af",
+    "dayOfWeek": 1,
+    "order": 4,
+    "courseName": "Jaringan Komputer",
+    "teacherName": "Marliana sari, S.T., MMSI.",
+    "startTime": "10:15",
+    "endTime": "11:05",
+    "dayName": "Senin"
+  },
+  {
+    "id": "3e8114bc-d26a-4244-b1f5-81db569b1593",
+    "dayOfWeek": 1,
+    "order": 5,
+    "courseName": "Pancasila",
+    "teacherName": "Fauzan Ghafur, SH., MH.",
+    "startTime": "11:05",
+    "endTime": "11:55",
+    "dayName": "Senin"
+  },
+  {
+    "id": "0c20b632-fe78-4856-b685-63e93a774b04",
+    "dayOfWeek": 1,
+    "order": 6,
+    "courseName": "Pancasila",
+    "teacherName": "Fauzan Ghafur, SH., MH.",
+    "startTime": "11:55",
+    "endTime": "12:45",
+    "dayName": "Senin"
+  },
+  {
+    "id": "84856d81-3bef-4ee6-8f4f-a26b39b7b912",
+    "dayOfWeek": 2,
+    "order": 1,
+    "courseName": "Praktik Perancangan Perangkat Lunak",
+    "teacherName": "Wiwin Sry Adinda Banjarnahor, S.Kom., M.Sc",
+    "startTime": "07:30",
+    "endTime": "08:20",
+    "dayName": "Selasa"
+  },
+  {
+    "id": "3d4f102a-5d9c-475b-b830-fe577bdcc02f",
+    "dayOfWeek": 2,
+    "order": 2,
+    "courseName": "Praktik Perancangan Perangkat Lunak",
+    "teacherName": "Wiwin Sry Adinda Banjarnahor, S.Kom., M.Sc",
+    "startTime": "08:20",
+    "endTime": "09:10",
+    "dayName": "Selasa"
+  },
+  {
+    "id": "13d8f388-60f1-4a35-b49f-be83206c4d30",
+    "dayOfWeek": 2,
+    "order": 3,
+    "courseName": "Matematika",
+    "teacherName": "Yunita Sari Siregar, S.T., M.Kom",
+    "startTime": "09:10",
+    "endTime": "10:00",
+    "dayName": "Selasa"
+  },
+  {
+    "id": "cf640c90-96fd-4290-95f3-8c985ddc2dd7",
+    "dayOfWeek": 2,
+    "order": 4,
+    "courseName": "Matematika",
+    "teacherName": "Yunita Sari Siregar, S.T., M.Kom",
+    "startTime": "10:15",
+    "endTime": "11:05",
+    "dayName": "Selasa"
+  },
+  {
+    "id": "30f3c978-96db-4805-846a-4031a4165160",
+    "dayOfWeek": 2,
+    "order": 5,
+    "courseName": "Kewirausahaan",
+    "teacherName": "Syarifah fadillah natasha",
+    "startTime": "11:05",
+    "endTime": "11:55",
+    "dayName": "Selasa"
+  },
+  {
+    "id": "ac082884-6893-4c23-ba5a-61dae6244cc2",
+    "dayOfWeek": 2,
+    "order": 6,
+    "courseName": "Kewirausahaan",
+    "teacherName": "Syarifah fadillah natasha",
+    "startTime": "11:55",
+    "endTime": "12:45",
+    "dayName": "Selasa"
+  },
+  {
+    "id": "5c88c96d-1a0b-46a4-8c6a-c1aa0bdf9e3a",
+    "dayOfWeek": 3,
+    "order": 1,
+    "courseName": "Praktik Pengujian Perangkat Lunak",
+    "teacherName": "Wiwin Sry Adinda Banjarnahor, S.Kom., M.Sc",
+    "startTime": "07:30",
+    "endTime": "08:20",
+    "dayName": "Rabu"
+  },
+  {
+    "id": "1e1d27d3-bf19-4b82-868c-c370e88ca4ef",
+    "dayOfWeek": 3,
+    "order": 2,
+    "courseName": "Praktik Pengujian Perangkat Lunak",
+    "teacherName": "Wiwin Sry Adinda Banjarnahor, S.Kom., M.Sc",
+    "startTime": "08:20",
+    "endTime": "09:10",
+    "dayName": "Rabu"
+  },
+  {
+    "id": "b2fcd65d-1094-4d14-828f-8139687d2fd7",
+    "dayOfWeek": 3,
+    "order": 3,
+    "courseName": "Elektronika",
+    "teacherName": "Muhammad Riki Atsauri, S.T., M.Kom",
+    "startTime": "09:10",
+    "endTime": "10:00",
+    "dayName": "Rabu"
+  },
+  {
+    "id": "a5bdf95d-3fd2-4c4d-971f-a67981b052ce",
+    "dayOfWeek": 3,
+    "order": 4,
+    "courseName": "Elektronika",
+    "teacherName": "Muhammad Riki Atsauri, S.T., M.Kom",
+    "startTime": "10:15",
+    "endTime": "11:05",
+    "dayName": "Rabu"
+  },
+  {
+    "id": "fe6e30e4-2868-4c68-91aa-740fa0c31c0a",
+    "dayOfWeek": 3,
+    "order": 5,
+    "courseName": "Praktik Elektronika",
+    "teacherName": "Muhammad Riki Atsauri, S.T., M.Kom",
+    "startTime": "11:05",
+    "endTime": "11:55",
+    "dayName": "Rabu"
+  },
+  {
+    "id": "8d4a0d25-a9f8-449c-ab0e-2625c3604780",
+    "dayOfWeek": 3,
+    "order": 6,
+    "courseName": "Praktik Elektronika",
+    "teacherName": "Muhammad Riki Atsauri, S.T., M.Kom",
+    "startTime": "11:55",
+    "endTime": "12:45",
+    "dayName": "Rabu"
+  },
+  {
+    "id": "7ce2744e-ad84-4a1b-9cea-68fe1ba23cfc",
+    "dayOfWeek": 4,
+    "order": 1,
+    "courseName": "Praktikum Jaringan Komputer",
+    "teacherName": "Marliana sari, S.T., MMSI.",
+    "startTime": "07:30",
+    "endTime": "08:20",
+    "dayName": "Kamis"
+  },
+  {
+    "id": "75fe5adb-1192-475b-a0b4-25770edb1351",
+    "dayOfWeek": 4,
+    "order": 2,
+    "courseName": "Praktikum Jaringan Komputer",
+    "teacherName": "Marliana sari, S.T., MMSI.",
+    "startTime": "08:20",
+    "endTime": "09:10",
+    "dayName": "Kamis"
+  },
+  {
+    "id": "17619e7d-a06d-44ca-9a0f-846b6ce40824",
+    "dayOfWeek": 4,
+    "order": 3,
+    "courseName": "Praktik Pemrograman C#",
+    "teacherName": "Kadri Yusuf, S.T., M. Kom.",
+    "startTime": "09:10",
+    "endTime": "10:00",
+    "dayName": "Kamis"
+  },
+  {
+    "id": "d09dfd92-576b-411d-82e2-2b184388a707",
+    "dayOfWeek": 4,
+    "order": 4,
+    "courseName": "Praktik Pemrograman C#",
+    "teacherName": "Kadri Yusuf, S.T., M. Kom.",
+    "startTime": "10:15",
+    "endTime": "11:05",
+    "dayName": "Kamis"
+  },
+  {
+    "id": "ac24c768-73f5-4cae-b048-de3b8d7315a6",
+    "dayOfWeek": 4,
+    "order": 5,
+    "courseName": "Jaringan Komputer",
+    "teacherName": "Marliana sari, S.T., MMSI.",
+    "startTime": "11:05",
+    "endTime": "11:55",
+    "dayName": "Kamis"
+  },
+  {
+    "id": "a3e0ab97-120f-481d-a707-fa3c5e04c8b5",
+    "dayOfWeek": 4,
+    "order": 6,
+    "courseName": "Jaringan Komputer",
+    "teacherName": "Marliana sari, S.T., MMSI.",
+    "startTime": "11:55",
+    "endTime": "12:45",
+    "dayName": "Kamis"
+  },
+  {
+    "id": "8a7b56bf-e536-4df9-92f9-4439135a80d5",
+    "dayOfWeek": 5,
+    "order": 1,
+    "courseName": "Pancasila",
+    "teacherName": "Fauzan Ghafur, SH., MH.",
+    "startTime": "07:30",
+    "endTime": "08:20",
+    "dayName": "Jumat"
+  },
+  {
+    "id": "efdcc428-3e41-4709-9808-cd692fff28ef",
+    "dayOfWeek": 5,
+    "order": 2,
+    "courseName": "Matematika",
+    "teacherName": "Yunita Sari Siregar, S.T., M.Kom",
+    "startTime": "08:20",
+    "endTime": "09:10",
+    "dayName": "Jumat"
+  },
+  {
+    "id": "2e95da0e-a5aa-4022-bba3-dc154c1966df",
+    "dayOfWeek": 5,
+    "order": 3,
+    "courseName": "Kewirausahaan",
+    "teacherName": "Syarifah fadillah natasha",
+    "startTime": "09:10",
+    "endTime": "10:00",
+    "dayName": "Jumat"
+  },
+  {
+    "id": "93f8b799-61b6-4263-9ea7-564bc61a6165",
+    "dayOfWeek": 5,
+    "order": 4,
+    "courseName": "Elektronika",
+    "teacherName": "Muhammad Riki Atsauri, S.T., M.Kom",
+    "startTime": "10:15",
+    "endTime": "11:05",
+    "dayName": "Jumat"
+  },
+  {
+    "id": "052edb26-8d41-4638-b8aa-19854d79b4bc",
+    "dayOfWeek": 5,
+    "order": 5,
+    "courseName": "Praktikum Jaringan Komputer",
+    "teacherName": "Marliana sari, S.T., MMSI.",
+    "startTime": "11:05",
+    "endTime": "11:55",
+    "dayName": "Jumat"
+  }
 ]

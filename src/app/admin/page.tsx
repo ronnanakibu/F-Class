@@ -54,6 +54,7 @@ import {
 import { getInitials, stringToHue } from '@/lib/utils';
 import ImageCropperModal from '@/components/ImageCropperModal';
 import AdminAbsensiTab from '@/components/admin/AdminAbsensiTab';
+import AdminJadwalTab from '@/components/admin/AdminJadwalTab';
 import type { IGStory, Project, Song, SlideItem } from '@/types';
 
 interface Student {
@@ -91,7 +92,7 @@ export default function AdminPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Active Tab: Unified Section Structure
-  const [activeTab, setActiveTab] = useState<'students' | 'journey' | 'projects' | 'music' | 'stories' | 'godmode' | 'absensi' | 'roadmap'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'journey' | 'projects' | 'music' | 'stories' | 'godmode' | 'absensi' | 'roadmap' | 'jadwal'>('students');
   // Student Sub-tabs: 'identity' (Form) | 'photos' (Foto Profil) | 'json' (Raw Code)
   const [studentSubTab, setStudentSubTab] = useState<'identity' | 'photos' | 'json'>('identity');
 
@@ -1983,6 +1984,18 @@ export default function AdminPage() {
           </button>
 
           <button
+            onClick={() => setActiveTab('jadwal')}
+            className={`flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+              activeTab === 'jadwal'
+                ? 'bg-accent text-bg-primary shadow-sm font-bold'
+                : 'text-text-muted hover:text-text-primary hover:bg-bg-surface/50'
+            }`}
+          >
+            <Calendar size={15} />
+            <span>📅 Jadwal Kuliah</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('roadmap')}
             className={`flex-1 min-w-[110px] py-2.5 px-3 rounded-xl text-xs font-heading font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'roadmap'
@@ -3593,6 +3606,9 @@ export default function AdminPage() {
 
         {/* TAB: ABSENSI KELAS */}
         {activeTab === 'absensi' && <AdminAbsensiTab />}
+
+        {/* TAB: JADWAL KULIAH */}
+        {activeTab === 'jadwal' && <AdminJadwalTab />}
 
         {/* TAB 4: ROADMAP SEKRETARIS & DEV */}
         {activeTab === 'roadmap' && (
