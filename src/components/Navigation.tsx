@@ -44,11 +44,16 @@ export default function Navigation() {
         {/* Logo Mark */}
         <a
           href="#hero"
-          className="font-heading font-bold text-lg tracking-tight cursor-pointer select-none"
+          className="flex items-center gap-2.5 font-heading font-bold text-lg tracking-tight cursor-pointer select-none group"
         >
-          <span className="text-accent">CE</span>
-          <span className="text-text-muted mx-1">—</span>
-          <span className="text-text-primary">F</span>
+          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center p-1 border border-accent/30 bg-bg-surface/80 shadow-sm shadow-accent/20 group-hover:border-accent/70 group-hover:shadow-accent/40 transition-all duration-300">
+            <img src="/favicon.svg" alt="CE F Logo" className="w-full h-full object-contain" />
+          </div>
+          <div>
+            <span className="text-accent">CE</span>
+            <span className="text-text-muted mx-1">—</span>
+            <span className="text-text-primary">F</span>
+          </div>
         </a>
 
         {/* Desktop Links + Theme Toggle */}
