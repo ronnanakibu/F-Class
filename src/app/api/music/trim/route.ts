@@ -56,7 +56,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const cleanApi = rawEndpoint.replace(/\/+$/, '');
+    let cleanApi = rawEndpoint.trim().replace(/\/+$/, '');
+    if (!cleanApi.startsWith('http://') && !cleanApi.startsWith('https://')) {
+      const isLocal =
+        cleanApi.includes('localhost') ||
+        cleanApi.includes('127.0.0.1') ||
+        cleanApi.includes(':25637') ||
+        cleanApi.startsWith('192.168.');
+      cleanApi = isLocal ? `http://${cleanApi}` : `https://${cleanApi}`;
+    }
 
     // Determine candidate endpoints:
     let candidateUrls: string[] = [];

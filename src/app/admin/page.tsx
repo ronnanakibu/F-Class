@@ -412,6 +412,20 @@ export default function AdminPage() {
     }
   };
 
+  const normalizeEndpointUrl = (url: string): string => {
+    let clean = url.trim().replace(/\/+$/, '');
+    if (!clean) return '';
+    if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+      const isLocal =
+        clean.includes('localhost') ||
+        clean.includes('127.0.0.1') ||
+        clean.includes(':25637') ||
+        clean.startsWith('192.168.');
+      clean = isLocal ? `http://${clean}` : `https://${clean}`;
+    }
+    return clean;
+  };
+
   const handleUpdateBotUrl = (url: string) => {
     setBotEndpointUrl(url);
     if (typeof window !== 'undefined') {
@@ -422,16 +436,21 @@ export default function AdminPage() {
   };
 
   const handleTestBotPing = async () => {
-    if (!botEndpointUrl.trim()) {
+    const raw = botEndpointUrl.trim();
+    if (!raw) {
       showToast('Masukkan URL Bot Endpoint terlebih dahulu', 'error');
       return;
+    }
+    const normalized = normalizeEndpointUrl(raw);
+    if (normalized !== raw) {
+      handleUpdateBotUrl(normalized);
     }
     setIsTestingBotPing(true);
     setBotPingStatus('idle');
     setBotPingMessage(null);
 
     try {
-      const res = await fetch(`/api/music/ping?endpoint=${encodeURIComponent(botEndpointUrl.trim())}`);
+      const res = await fetch(`/api/music/ping?endpoint=${encodeURIComponent(normalized)}`);
       const data = await res.json();
       if (data.online) {
         setBotPingStatus('online');
@@ -858,6 +877,14 @@ export default function AdminPage() {
     setTrimFeedback(null);
 
     try {
+      const activeBotEndpoint =
+        useBotEndpoint && botEndpointUrl.trim()
+          ? normalizeEndpointUrl(botEndpointUrl.trim())
+          : undefined;
+      if (activeBotEndpoint && activeBotEndpoint !== botEndpointUrl.trim()) {
+        handleUpdateBotUrl(activeBotEndpoint);
+      }
+
       const key = getActiveApiKey();
       const res = await fetch('/api/music/trim', {
         method: 'POST',
@@ -873,7 +900,7 @@ export default function AdminPage() {
           title: formSongTitle,
           artist: formSongArtist,
           apiKey: key,
-          botEndpoint: useBotEndpoint && botEndpointUrl.trim() ? botEndpointUrl.trim() : undefined,
+          botEndpoint: activeBotEndpoint,
         }),
       });
 
@@ -5029,7 +5056,13 @@ export default function AdminPage() {
                                   type="text"
                                   value={botEndpointUrl}
                                   onChange={(e) => handleUpdateBotUrl(e.target.value)}
-                                  placeholder="http://ap1.nzb.zelpstore.id:25637"
+                                  onBlur={() => {
+                                    if (botEndpointUrl.trim()) {
+                                      const norm = normalizeEndpointUrl(botEndpointUrl);
+                                      if (norm !== botEndpointUrl) handleUpdateBotUrl(norm);
+                                    }
+                                  }}
+                                  placeholder="https://whatsapp-bots-production-165f.up.railway.app"
                                   className="flex-1 px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs font-mono text-white placeholder:text-text-dim/50 focus:outline-none focus:border-amber-500/60"
                                 />
                                 <button
@@ -5046,6 +5079,13 @@ export default function AdminPage() {
                               {/* Quick Presets */}
                               <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                                 <span className="text-[10px] font-mono text-text-dim">Preset Host:</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateBotUrl('https://whatsapp-bots-production-165f.up.railway.app')}
+                                  className="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 hover:text-white border border-amber-500/30 cursor-pointer"
+                                >
+                                  Railway (Production)
+                                </button>
                                 <button
                                   type="button"
                                   onClick={() => handleUpdateBotUrl('http://ap1.nzb.zelpstore.id:25637')}
